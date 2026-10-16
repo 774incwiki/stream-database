@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ななしいんく配信アーカイブ</title>
+<meta name="description" content="Vtuberの配信アーカイブを、配信者・ジャンル・コラボ相手のタグで検索できる一覧です。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="index">
+<div class="wrap" id="app">
+  <header class="site">
+    <span class="brand">ななしいんく配信アーカイブ</span>
+    <nav aria-label="メニュー">
+    </nav>
+  </header>
+
+  <h1>配信一覧</h1>
+  <p class="lede" id="lede">読み込み中…</p>
+
+  <div class="bar">
+    <div class="search"><input id="q" type="search" placeholder="タイトル・タグで検索" autocomplete="off" enterkeyhint="search" aria-label="検索"></div>
+    <button class="btn" type="button" id="fbtn" aria-expanded="false" aria-controls="filters">絞り込み<span class="badge" id="fbadge" hidden>0</span></button>
+  </div>
+
+  <div class="layout">
+    <aside class="filters" id="filters" aria-label="絞り込み"></aside>
+    <button type="button" class="fclose" id="fclose">✕ 閉じる</button>
+    <div class="fback" id="fback"></div>
+    <main>
+      <div class="active" id="active"></div>
+      <div class="toolbar">
+        <span class="count" id="count"></span>
+        <div class="tools">
+          <label><span style="position:absolute;left:-9999px">並び順</span>
+            <select id="sort"><option value="desc">新しい順</option><option value="asc">古い順</option></select>
+          </label>
+          <label><span style="position:absolute;left:-9999px">表示数</span>
+            <select id="per"><option value="10">10件ずつ</option><option value="20" selected>20件ずつ</option><option value="50">50件ずつ</option><option value="100">100件ずつ</option></select>
+          </label>
+        </div>
+      </div>
+      <div id="list"><p class="empty">読み込み中…</p></div>
+    </main>
+  </div>
+
+  <footer class="foot">非公式のファンサイトです。掲載内容に誤りがあれば、お知らせください。</footer>
+</div>
+<script src="config.js"></script>
+<script src="data.js" onerror="void 0"></script>
+<script src="app.js"></script>
+</body>
+</html>
