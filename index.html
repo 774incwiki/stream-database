@@ -1,0 +1,857 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ななしいんく配信アーカイブ</title>
+<meta name="description" content="Vtuberの配信アーカイブを、配信者・ジャンル・コラボ相手のタグで検索できる一覧です。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&family=IBM+Plex+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+/* ななしいんく配信アーカイブ 公開サイト用スタイル
+   色や文字は先頭の変数を書き換えるだけで変えられます。 */
+:root{
+  --bg:#F2F3F8; --surface:#FFFFFF; --ink:#1A1D2B; --ink2:#565C70;
+  --line:#DDE0EA; --line2:#C4CAD9;
+  --accent:#D42A6B; --on-fill:#FFFFFF;
+  --genre:#D42A6B; --genre-tint:#FBE3EC; --genre-ink:#A3154F;
+  --sub:#5A55D6;   --sub-tint:#E6E5FA;   --sub-ink:#3F3AA8;
+  --collab:#087880;--collab-tint:#D9F1F2;--collab-ink:#07646B;
+  --mem-tint:#DDF3E4; --mem-ink:#14633A; --mute-bg:#E7E9F0;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Noto Sans JP",sans-serif;
+  --f-display:"M PLUS Rounded 1c","Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#101219; --surface:#181B26; --ink:#ECEEF6; --ink2:#A0A6BC;
+    --line:#2A2E3E; --line2:#3C4157;
+    --accent:#FF7FB0; --on-fill:#14111A;
+    --genre:#FF7FB0; --genre-tint:#3A1B2A; --genre-ink:#FF9DC2;
+    --sub:#A5A2FF;   --sub-tint:#25244A;   --sub-ink:#BDBBFF;
+    --collab:#5FD6DE;--collab-tint:#123A3D;--collab-ink:#7FE3EA;
+    --mem-tint:#12301F; --mem-ink:#7FDBA4; --mute-bg:#1D2029;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:14px 64px;
+}
+button,input,select{font:inherit;color:inherit}
+a{color:inherit}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1360px;margin:0 auto}
+
+/* site header */
+.site{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px 20px;padding-bottom:10px;margin-bottom:14px;border-bottom:1px solid var(--line)}
+.brand{font-family:var(--f-display);font-weight:800;font-size:18px;color:var(--ink);text-decoration:none}
+.site nav{display:flex;gap:4px}
+.site nav a{padding:8px 12px;border-radius:8px;color:var(--ink2);text-decoration:none;font-size:14px;font-weight:500}
+.site nav a[aria-current="page"]{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+
+h1{font-family:var(--f-display);font-weight:800;font-size:clamp(24px,6vw,34px);line-height:1.2;margin:0;text-wrap:balance}
+.lede{margin:6px 0 0;color:var(--ink2);font-size:13px;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;padding:0 16px;border:1px solid var(--line2);border-radius:10px;background:var(--surface);cursor:pointer;font-weight:500}
+.btn:hover{border-color:var(--ink2)}
+.linkbtn{border:0;background:none;padding:6px 0;min-height:36px;color:var(--ink2);cursor:pointer;text-decoration:underline;text-decoration-color:var(--line2);text-underline-offset:4px;font-size:13px}
+.linkbtn:hover{color:var(--ink)}
+
+/* search bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:10px;display:flex;gap:8px}
+.search{flex:1;min-width:0}
+.search input{width:100%;min-height:46px;padding:0 14px;border:1px solid var(--line2);border-radius:12px;background:var(--surface);font-size:16px;appearance:none;-webkit-appearance:none}
+.search input::placeholder{color:var(--ink2)}
+#fbtn{min-height:46px;border-radius:12px}
+#fbtn .badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:var(--accent);color:var(--on-fill);font-family:var(--f-mono);font-size:11px}
+
+/* layout */
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.filters{display:none;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px 14px}
+.filters.open{display:block}
+.grp{padding-block:12px;border-top:1px solid var(--line)}
+.grp:first-child{border-top:0}
+.grp h3{margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--ink2)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 11px;border:1px solid var(--line2);border-radius:999px;background:var(--surface);cursor:pointer;font-size:13px;max-width:100%}
+.chip .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.chip i{flex:none;width:7px;height:7px;border-radius:50%;background:var(--dot)}
+.chip .n{flex:none;font-family:var(--f-mono);font-size:11px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.chip.zero{opacity:.42}
+.chip[aria-pressed="true"]{background:var(--dot);border-color:var(--dot);color:var(--on-fill)}
+.chip[aria-pressed="true"] i{background:var(--on-fill)}
+.chip[aria-pressed="true"] .n{color:inherit}
+.chip.zero[aria-pressed="true"]{opacity:1}
+.k-talent{--dot:var(--ink)} .k-genre{--dot:var(--genre)} .k-sub{--dot:var(--sub)} .k-collabIn,.k-collabOut,.k-cast{--dot:var(--collab)} .k-status,.k-kind,.k-away,.k-chan,.k-platform{--dot:var(--ink2)}
+.more{margin-top:8px}
+.nogrp{margin:0;padding:10px 0;color:var(--ink2);font-size:13px}
+.active{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.toolbar .count{font-family:var(--f-mono);font-size:12.5px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.toolbar select{min-height:38px;padding:0 10px;border:1px solid var(--line2);border-radius:10px;background:var(--surface);font-size:14px}
+
+/* list */
+.month{display:flex;align-items:baseline;gap:10px;margin:22px 0 2px;font-family:var(--f-display);font-size:16px;font-weight:800}
+.month small{font-family:var(--f-mono);font-size:12px;color:var(--ink2)}
+.list{list-style:none;margin:0;padding:0}
+.row{padding:14px 0;border-top:1px solid var(--line)}
+.meta{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;font-size:13px;color:var(--ink2)}
+.date{font-family:var(--f-mono);font-size:12.5px;font-variant-numeric:tabular-nums}
+.talent{display:inline-flex;align-items:center;min-height:30px;padding:0 10px;border:0;border-radius:8px;background:var(--mute-bg);color:var(--ink);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(128,128,128,.28)}
+.talent:hover{box-shadow:inset 0 0 0 2px currentColor}
+.req{margin-left:auto;font-size:12.5px;color:var(--ink2);text-underline-offset:4px}
+.req:hover{color:var(--ink)}
+.title{display:block;margin:2px 0 8px;font-size:16.5px;font-weight:700;line-height:1.5;color:var(--ink);text-decoration:none;overflow-wrap:anywhere}
+a.title:hover{color:var(--accent)}
+.title.nolink{font-weight:500}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{display:inline-flex;align-items:center;min-height:30px;padding:0 10px;border:0;border-radius:8px;background:var(--tint);color:var(--tink);font-size:12.5px;cursor:pointer;max-width:100%;overflow-wrap:anywhere;text-align:left}
+.tag.kind{--tint:var(--ink);--tink:var(--bg);font-weight:700}
+.tag.genre{--tint:var(--genre-tint);--tink:var(--genre-ink);font-weight:700}
+.tag.sub{--tint:var(--sub-tint);--tink:var(--sub-ink)}
+.tag.chan{--tint:var(--mute-bg);--tink:var(--ink)}
+.tag.collab{--tint:var(--collab-tint);--tink:var(--collab-ink)}
+.tag .bx{margin-left:6px;padding:1px 5px;border-radius:4px;background:var(--collab);color:var(--on-fill);font-size:10.5px;font-weight:700}
+.hint{margin:0 0 8px;font-size:12px;color:var(--ink2)}
+.tag[aria-pressed="true"]{box-shadow:inset 0 0 0 2px currentColor}
+.desc{margin:0 0 8px;font-size:13.5px;color:var(--ink2);overflow-wrap:anywhere}
+.reason{margin:0 0 8px;font-size:13px;color:var(--ink2);overflow-wrap:anywhere}
+.st{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border:0;border-radius:6px;font:inherit;font-size:11.5px;font-weight:700;letter-spacing:.03em;cursor:pointer}
+.st[aria-pressed="true"]{box-shadow:inset 0 0 0 2px currentColor}
+.st.members{background:var(--mem-tint);color:var(--mem-ink)}
+.st.private{background:var(--line);color:var(--ink2)}
+.kd{display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:6px;border:1px solid var(--line2);font-size:11.5px;font-weight:700;letter-spacing:.03em;color:var(--ink)}
+.kd.away{border-color:var(--collab);background:var(--collab-tint);color:var(--collab-ink)}
+.kd.twitch{border-color:#9146FF;background:#EFE6FF;color:#5B21B6}
+@media (prefers-color-scheme: dark){.kd.twitch{background:#2A1F4A;color:#C9B0FF}}
+/* 非公開の行は枠ごとグレーアウトします */
+.row.private{margin:8px 0;padding:14px;background:var(--mute-bg);border:1px dashed var(--line2);border-radius:12px;color:var(--ink2);filter:grayscale(1)}
+.row.private .title{color:var(--ink2);font-weight:500;letter-spacing:.02em}
+.row.private .tag{opacity:.75}
+.showmore{display:flex;justify-content:center;padding:20px 0}
+.tools{display:flex;gap:8px}
+.pager{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;padding:24px 0 4px}
+.pg{min-width:40px;min-height:40px;padding:0 10px;border:1px solid var(--line2);border-radius:10px;background:var(--surface);cursor:pointer;font-family:var(--f-mono);font-size:13px}
+.pg:hover:not(:disabled){border-color:var(--ink2)}
+.pg.cur{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pg:disabled{opacity:.4;cursor:default}
+.pgap{color:var(--ink2);padding:0 2px}
+.empty{padding:36px 4px;color:var(--ink2)}
+.empty h2{margin:0 0 6px;font-size:18px;color:var(--ink)}
+.empty p{margin:0 0 16px;max-width:52ch}
+
+/* talent pages */
+.profile{margin:4px 0 8px}
+.profile p{margin:10px 0 0;max-width:60ch;color:var(--ink2)}
+.links{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:14px}
+.links a{text-underline-offset:4px}
+.opt{display:inline-flex;align-items:center;gap:8px;min-height:36px;margin-top:6px;font-size:13px;color:var(--ink2);cursor:pointer}
+.opt input{width:18px;height:18px;accent-color:var(--accent)}
+.tlist{list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:12px}
+.tcard{display:block;height:100%;padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;color:inherit;text-decoration:none}
+.tcard:hover{border-color:var(--ink2)}
+.tcard h2{margin:0 0 4px;font-family:var(--f-display);font-weight:400;font-size:17px}
+.tcard p{margin:0;font-size:13px;color:var(--ink2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tcard .n{display:block;margin-top:8px;font-family:var(--f-mono);font-size:12px;color:var(--ink2)}
+
+.foot{margin-top:48px;padding-top:14px;border-top:1px solid var(--line);font-size:12.5px;color:var(--ink2)}
+
+@media (min-width:880px){
+  .layout{grid-template-columns:268px minmax(0,1fr);gap:32px;align-items:start}
+  .filters{display:block;position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);max-height:calc(100vh - 100px);overflow-y:auto}
+  #fbtn{display:none}
+}
+@media (prefers-reduced-motion:no-preference){
+  .chip,.btn,.tag,.tcard{transition:background-color .12s,border-color .12s,color .12s}
+}
+
+/* スマホ: 絞り込みを左から出るパネルにする */
+.fclose,.fback{display:none}
+@media (max-width:879.98px){
+  .filters{display:block;position:fixed;top:0;bottom:0;left:0;z-index:30;width:min(86vw,340px);overflow-y:auto;
+    border-radius:0 16px 16px 0;border-left:0;
+    padding:calc(56px + env(safe-area-inset-top,0px)) 14px calc(24px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));
+    transform:translateX(-105%);visibility:hidden;transition:transform .2s ease,visibility 0s linear .2s}
+  .filters.open{transform:none;visibility:visible;transition:transform .2s ease}
+  .filters.open ~ .fback{display:block;position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.5)}
+  .filters.open ~ .fclose{display:flex;align-items:center;position:fixed;top:0;left:0;z-index:31;width:min(86vw,340px);height:calc(48px + env(safe-area-inset-top,0px));
+    padding:env(safe-area-inset-top,0px) 14px 0 max(14px,env(safe-area-inset-left,0px));border:0;border-bottom:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:700;cursor:pointer;text-align:left}
+}
+@media (prefers-reduced-motion:reduce){.filters{transition:none!important}}
+
+/* 合言葉の入力(暗号化して公開するとき) */
+.gate{max-width:420px;margin:32px 0}
+.gate label:not(.opt){display:block;font-weight:700;margin-bottom:8px}
+.gate .grow{display:flex;gap:8px}
+.gate input[type=password]{flex:1;min-width:0;min-height:46px;padding:0 14px;border:1px solid var(--line2);border-radius:12px;background:var(--surface);color:var(--ink)}
+.gate .btn{min-height:46px;border-radius:12px;padding:0 18px}
+.gate .opt{display:flex;align-items:center;gap:8px;margin-top:12px;color:var(--ink2);font-size:13px}
+.gmsg{min-height:1.4em;margin:10px 0 0;color:var(--accent);font-size:13px}
+body.locked .bar,body.locked .layout,body.locked .lede,body.locked .foot{display:none}
+
+</style>
+</head>
+<body data-page="index">
+<div class="wrap" id="app">
+  <header class="site">
+    <span class="brand">ななしいんく配信アーカイブ</span>
+    <nav aria-label="メニュー">
+    </nav>
+  </header>
+
+  <h1>配信一覧</h1>
+  <section id="gate" class="gate" hidden>
+    <form id="gform" autocomplete="off">
+      <label for="gpass">合言葉を入力してください</label>
+      <div class="grow"><input id="gpass" type="password" autocomplete="current-password" enterkeyhint="go"><button class="btn" id="gbtn" type="submit">開く</button></div>
+      <label class="opt"><input id="gkeep" type="checkbox" checked><span>このブラウザに覚えておく</span></label>
+      <p id="gmsg" class="gmsg" role="status"></p>
+    </form>
+  </section>
+  <p class="lede" id="lede">読み込み中…</p>
+
+  <div class="bar">
+    <div class="search"><input id="q" type="search" placeholder="タイトル・タグで検索" autocomplete="off" enterkeyhint="search" aria-label="検索"></div>
+    <button class="btn" type="button" id="fbtn" aria-expanded="false" aria-controls="filters">絞り込み<span class="badge" id="fbadge" hidden>0</span></button>
+  </div>
+
+  <div class="layout">
+    <aside class="filters" id="filters" aria-label="絞り込み"></aside>
+    <button type="button" class="fclose" id="fclose">✕ 閉じる</button>
+    <div class="fback" id="fback"></div>
+    <main>
+      <div class="active" id="active"></div>
+      <div class="toolbar">
+        <span class="count" id="count"></span>
+        <div class="tools">
+          <label><span style="position:absolute;left:-9999px">並び順</span>
+            <select id="sort"><option value="desc">新しい順</option><option value="asc">古い順</option></select>
+          </label>
+          <label><span style="position:absolute;left:-9999px">表示数</span>
+            <select id="per"><option value="10">10件ずつ</option><option value="20" selected>20件ずつ</option><option value="50">50件ずつ</option><option value="100">100件ずつ</option></select>
+          </label>
+        </div>
+      </div>
+      <div id="list"><p class="empty">読み込み中…</p></div>
+    </main>
+  </div>
+
+  <footer class="foot">非公式のファンサイトです。掲載内容に誤りがあれば、お知らせください。</footer>
+</div>
+<script>
+/* サイトの設定ファイルです。ここだけ書き換えれば反映されます。 */
+window.SITE_CONFIG = {
+  /* 合言葉つきで公開するときは encrypt_data.py が、公開用フォルダ(public)の中で true にします。ここは変えなくて大丈夫です。 */
+  encrypted: false,
+  /* リクエストや訂正の連絡を受け付けるページのURL。
+     例）GitHub Issues: "https://github.com/ユーザー名/リポジトリ名/issues/new"
+     例）Googleフォーム: "https://forms.gle/xxxxxxxx"
+     空欄("")のままなら、リクエストのリンクは表示されません。 */
+  requestUrl: ""
+};
+
+window.SITE_DATA = {"archives.csv": "配信者,日付,タイトル,URL,ジャンル,詳細ジャンル,コラボ相手,メン限,動画,Shorts,Twitch,説明,非公開,非公開の理由,配信元チャンネル\nアズリ,2026/10/01,実写わんこの育成ゲーム -ゴールデンレトリバーと過ごす日々【ななしいんく/アズリ】,https://www.youtube.com/watch?v=k44PQ-O1CDE,ゲーム,ゴールデンレトリバーと過ごす日々,,,,,,,,,\nアズリ,2026/10/02,[ENG SUB]#18 クラゲはね、しゃべらないの。【ELDEN RING / アズリAzri】,https://www.youtube.com/watch?v=9PNHZv317GU,ゲーム,ELDEN RING,,,●,,,,,,\nアズリ,2026/10/02,#20【 #eldenring  】今日こそ打倒神肌だ～!!!!!! ❘ ファルムアズラ・雪山(秘)【ななしいんく/アズリ】,https://www.youtube.com/watch?v=AH9I2kRwmQA,ゲーム,ELDEN RING,,,,,,,,,\nアズリ,2026/10/03,[ENG SUB]#18 履いてるの!?履いてないの!?【ELDEN RING / アズリAzri】,https://www.youtube.com/watch?v=GeSi5ZH-Sn0,ゲーム,ELDEN RING,,,●,,,,,,\nアズリ,2026/10/03,#21【 #eldenring  】VSマリケス！獣の司祭と戦う ❘ ファルムアズラ【ななしいんく/アズリ】,https://www.youtube.com/watch?v=Wk38WOYXTak,ゲーム,ELDEN RING,,,,,,,,,\nアズリ,2026/10/04,ど　で　か　歩　き- #BigWalk【ななしいんく/ RIΣM】,https://www.youtube.com/watch?v=f18psHjcmos,ゲーム、コラボ,RIΣMコラボ、Big Walk,緑青くれは、ここ・じぇす汰、汐鳴みりね、漆瀬レイ,,,,,,,,\nアズリ,2026/10/05,何も記憶がない。-SILENT HILL: Townfall【ななしいんく/アズリ】,https://www.youtube.com/watch?v=Irl0rjDrPHg,ゲーム,SILENT HILL,,,,,,,,,\nアズリ,2026/10/06,”肺への著しい液体流入”　-SILENT HILL: Townfall【ななしいんく/アズリ】,https://www.youtube.com/watch?v=hL3VNckzjbA,ゲーム,SILENT HILL,,,,,,,,,\nアズリ,2026/10/07,むにむに【ななしいんく/アズリ】,https://www.youtube.com/watch?v=yom1dkpQFTs,雑談,,,,,,,,,,\nアズリ,2026/10/09,[ENG SUB]#20 神肌の(だいたい)ふたり【ELDEN RING / アズリAzri】,https://www.youtube.com/watch?v=CQOyjkbT1oA,ゲーム,ELDEN RING,,,●,,,,,,\nアズリ,2026/10/09,[ENG SUB]#21 ボスラッシュだ!!!マリケス、ギデオン、ホーラ・ルー!!!!【ELDEN RING / アズリAzri】,https://www.youtube.com/watch?v=IW_sUBjdU7E,ゲーム,ELDEN RING,,,●,,,,,,\nアズリ,2026/10/09,#22【 #eldenring  】初代エルデの王、ホーラ・ルー【ななしいんく/アズリ】,https://www.youtube.com/watch?v=aAkdG-q3Pmw,ゲーム,ELDEN RING,,,,,,,,,\nアズリ,2026/10/10,#23【 #eldenring  】にーひる♥にーひる♥【ななしいんく/アズリ】,https://www.youtube.com/watch?v=gBc5NAUw4eI,ゲーム,ELDEN RING,,,,,,,,,\nアズリ,2026/10/11,第二章ゾーイ 仕事を辞めたい看護師　-SILENT HILL: Townfall【ななしいんく/アズリ】,https://www.youtube.com/watch?v=nAmLLpKKGDg,ゲーム,SILENT HILL,,,,,,,,,\nアズリ,2026/10/12,へんな生き物と森のちいさなレストラン -Creature Kitchen【ななしいんく/アズリ】,https://www.youtube.com/watch?v=OuluxupXIZw,ゲーム,Creature Kitchen,,,,,,,,,\nアズリ,2026/10/13,一緒に作業しませんか？ -Sort The Capybaras【ななしいんく/アズリ】,https://www.youtube.com/watch?v=OMCUr5S_EQk,雑談,,,,,,,,,,\nアズリ,2026/10/14,あなたにとって必要なものは？　-SILENT HILL: Townfall【ななしいんく/アズリ】,https://www.youtube.com/watch?v=XnAi258KlXo,ゲーム,SILENT HILL,,,,,,,,,\nアズリ,2026/10/15,第10回! 小さなお悩みから大きなお悩みまで - #天使の告解室【ななしいんく/アズリ】,https://www.youtube.com/watch?v=PnAM4Asrcqw,雑談、定期枠,天使の告解室,,,,,,,,,\nここ・じぇす汰,2026/10/01,【 Don't Drop The Cake 】絶対に落とせないケーキ vs 絶対にやらかすゲーム音痴【 ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=W1_Uo6Y0_gE,ゲーム,Don't Drop The Cake,,,,,,,,,\nここ・じぇす汰,2026/10/02,【手元カメラ有り】増税に屈しない酒カス狐の華金。 #居酒屋じぇ酒汰 【ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=MqDXsz40Mpw,定期枠,飲酒、実写有,,,,,,,,,\nここ・じぇす汰,2026/10/04,【Big Walk】同期の友情を試す。わちゃわちゃ大冒険‼️【 RIΣM  / ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=PbOF3B4_umw,ゲーム、コラボ,RIΣMコラボ、Big Walk,アズリ、緑青くれは、汐鳴みりね、漆瀬レイ,,,,,,,,\nここ・じぇす汰,2026/10/05,眠気 VS 配信 ＃ここモニコ【ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=UpOGGCyUM-8,雑談、定期枠,ここモニコ,,,,,,,,,\nここ・じぇす汰,2026/10/07,酒飲み女のお悩み相談室🍻‼️【ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=dv70sBHv1ME,企画,,,,,,,,,,\nここ・じぇす汰,2026/10/09,【手元カメラ有り】宅 飲 み し よ 。 #居酒屋じぇ酒汰 【ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=rL3SpptGE_w,定期枠,飲酒、実写有,,,,,,,,,\nここ・じぇす汰,2026/10/11,【ネタバレ禁止】バカに優しいゲーム。ネタバレが激しすぎるRPG―最後の敵の正体は勇者の父―【 RIΣM  / ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=JpTwaMz_qrM,ゲーム,ネタバレが激しすぎるRPG,,,,,,,,,\nここ・じぇす汰,2026/10/14,【 歌枠 / KARAOKE 】ラ イ ブ 前 歌 練 習 。【ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=yidKaVmx8s4,歌枠,,,,,,,,,,\nここ・じぇす汰,2026/10/15,【浮気判定シート】チョロ女、どこまで許せるのか検証。【ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=zNrXzI2AoBk,雑談、企画,浮気判定シート,,,,,,,,,\nななしいんく公式,2026/10/01,【#ななしスイカ大会】新しいストレス解消法を即実行する宗谷いちか【宗谷いちか/島村シャルロット/堰代ミコ/季咲あんこ/風見くく/ここ・じぇす汰】#ななしいんく #shorts,https://www.youtube.com/watch?v=k11q7cQ0X8I, ,,,,●,,,,,,\nななしいんく公式,2026/10/02,【#ななしスイカ大会】どんな角度からでも宗谷いちかを崇める島村シャルロット【宗谷いちか/島村シャルロット/堰代ミコ/季咲あんこ/風見くく/ここ・じぇす汰】#ななしいんく #shorts,https://www.youtube.com/watch?v=nC3vog1Ub9g, ,,,,●,,,,,,\nななしいんく公式,2026/10/03,【#3Dコラボ配信】天羽衣によるライブ出演メンバー紹介 【#ななしいんく】 #shorts,https://www.youtube.com/watch?v=SqMWTvdNm9U,,,,,●,,,,,,\nななしいんく公式,2026/10/10,【#3Dコラボ配信】ライブ告知で泣いてしまう？羽流鷲りりり【#ななしいんく】 #shorts,https://www.youtube.com/watch?v=KzgjEqfdmtM, ,,,,●,,,,,,\nななしいんく公式,2026/10/12,【ライブまであと5️⃣日】　『Starlight Tribute』カウントダウン動画,https://www.youtube.com/watch?v=W4RHpTkTaoc, ,,,,●,,,,,,\nななしいんく公式,2026/10/13,【ライブまであと4️⃣日】ななしいんくライブ　『Starlight Tribute』カウントダウン動画,https://www.youtube.com/watch?v=gR4VKY9Q6I4, ,,,,●,,,,,,\nななしいんく公式,2026/10/14,【ライブまであと3️⃣日❕️】　『Starlight Tribute』カウントダウン動画,https://www.youtube.com/watch?v=xiH8-mO_ha8, ,,,,●,,,,,,\nななしいんく公式,2026/10/15,【ライブまであと2️⃣日❕️】　『Starlight Tribute』カウントダウンをお届け！,https://www.youtube.com/watch?v=O4zqcFo6_b8, ,,,,●,,,,,,\nぴかまるNS-PT01,2026/10/03,【感情学習ラジオ】#16『不気味』を理解したい【ぴかまる NS-PT01/ななしいんく】,https://www.youtube.com/watch?v=vwNl9zuTmao,定期枠,感情学習ラジオ,,,,,,,,,\nぴかまるNS-PT01,2026/10/04,【RADIOSOL】かっこよすぎSF散歩【ぴかまる NS-PT01/ななしいんく】,https://www.youtube.com/watch?v=kd4t4-zUNI4,ゲーム,RADIOSOL,,,,,,,,,\nぴかまるNS-PT01,2026/10/06,【ダンボール戦機】#14 ありがとうクエストBBS 【ぴかまる NS-PT01/ななしいんく】,https://www.youtube.com/watch?v=e96PWUqhWLU,ゲーム,ダンボール戦機,,,,,,,,,\nぴかまるNS-PT01,2026/10/07,【BIOHAZARD RE:2】へっぽこエイムバイオ散歩【ぴかまる NS-PT01/ななしいんく】,https://www.youtube.com/watch?v=O1tqo6ISz6E,ゲーム,BIOHAZARD,,,,,,,,,\nぴかまるNS-PT01,2026/10/10,【感情学習ラジオ】#17『感傷』を理解したい【ぴかまる NS-PT01/ななしいんく】,https://www.youtube.com/watch?v=b05VSuahu6M,定期枠,感情学習ラジオ,,,,,,,,,\nぴかまるNS-PT01,2026/10/11,【Dreamcore】#1 プールと仲良くなろうのコーナー【ぴかまる NS-PT01/ななしいんく】,https://www.youtube.com/watch?v=SPdLF7zALMc,ゲーム,Dreamcore,,,,,,,,,\nぴかまるNS-PT01,2026/10/12,【ガラージュ GARAGE: Bad Dream Adventure】#1精神世界探索 【ぴかまる NS-PT01/ななしいんく】,https://www.youtube.com/watch?v=l4apcTUqXnM,ゲーム,ガラージュ GARAGE,,,,,,,●,,\nぴかまるNS-PT01,2026/10/13,【カスタムロボ】#1 噂はかねがね完全初見【ぴかまる NS-PT01/ななしいんく】,https://www.youtube.com/watch?v=QwN5zi35QOA,ゲーム,カスタムロボ,,,,,,,,,\nぴかまるNS-PT01,2026/10/14,【Dreamcore】#2 ひろびろ空間と仲良くなろうのコーナー【ぴかまる NS-PT01/ななしいんく】,https://www.youtube.com/watch?v=yBYrDwZKhfg,ゲーム,Dreamcore,,,,,,,,,\n茜音カンナ,2026/10/01,【 THE REAL FOLK BLUES / 山根麻衣 】「COWBOY BEBOP」ED歌った！アカペラver #shorts #animesong【茜音カンナ / ななしいんく】,https://www.youtube.com/watch?v=sm8ackiJtrQ, ,,,,,●,,,,,\n茜音カンナ,2026/10/03,【 Paradise Lost / 茅原実里 】「喰霊-零-」OP歌った！アカペラver #shorts #animesong 【茜音カンナ / ななしいんく】,https://www.youtube.com/watch?v=4bcNw8bl5JU, ,,,,,●,,,,,\n茜音カンナ,2026/10/04,【 メン限 】濃いバナ。【茜音カンナ / ななしいんく】,https://www.youtube.com/watch?v=EB1ZRLZWp5o,雑談,,,●,,,,,,,\n茜音カンナ,2026/10/13,【 Avid / SawanoHiroyuki[nZk]:mizuki 】「86―エイティシックス―」ED歌った！アカペラver #shorts #animesong 【茜音カンナ / ななしいんく】,https://www.youtube.com/watch?v=TLxCc47FR08, ,,,,,●,,,,,\n茜音カンナ,2026/10/14,【 朝ラジ 】わんもに！～第158～【茜音カンナ / ななしいんく】,https://www.youtube.com/watch?v=0miIRHkHGfE,雑談,わんもに！,,,,,,,,,\n杏戸ゆげ,2026/10/01,【ARK Survival Ascended/天下無双ARK＃6】試練の洞窟攻略するぞっ🦕【杏戸ゆげ/ななしいんく】,https://www.youtube.com/watch?v=vkO59E-xKBk,ゲーム、スト鯖,ARK、天下無双ARK,,,,,,,,,\n杏戸ゆげ,2026/10/02,【飲み歩きin浅草】酒好きVtuberの外ロケが最高すぎる🍻🎉！【#なな酒いんく】,https://www.youtube.com/watch?v=7wI6_ITJG8g,ゲーム,,,,,,,,,,\n杏戸ゆげ,2026/10/02,【ARK Survival Ascended/天下無双ARK＃7】まったりボスの準備おてつだい🦕【杏戸ゆげ/ななしいんく】,https://www.youtube.com/watch?v=GKzo0nOIq-g,ゲーム、スト鯖,ARK、天下無双ARK,,,,,,,,,\n杏戸ゆげ,2026/10/05,おしゃべりでかサウルス,,雑談,,,,,,●,,,,\n杏戸ゆげ,2026/10/06,ちょっぴりおはなしサウルス,,雑談,,,,,,●,,,,\n杏戸ゆげ,2026/10/07,今日は酔っぱらってもよし🍻【杏戸ゆげ/ななしいんく】,https://www.youtube.com/watch?v=i1bN2kK3jPI,雑談,飲酒,,,,,,,,,\n杏戸ゆげ,2026/10/08,酔っ払いTFTざうるす,,ゲーム,Overwatch,,,,,●,,,,\n杏戸ゆげ,2026/10/09,【文字化化】ホラーな男子と恋したい💓！恋愛×言語解読ゲーム【杏戸ゆげ/ななしいんく】,https://www.youtube.com/watch?v=c1h_Uar3W50,ゲーム,文字化化,,,,,,,,,\n杏戸ゆげ,2026/10/09,【文字化化】2周目！みんながわたしにめろめろ💓？恋愛×言語解読ゲーム【杏戸ゆげ/ななしいんく】,https://www.youtube.com/watch?v=rW_SVrdJxqQ,ゲーム,文字化化,,,,,,,,,\n杏戸ゆげ,2026/10/10,ライブもうすぐだ…【杏戸ゆげ/ななしいんく】,https://www.youtube.com/watch?v=7rP60OWXxuo,雑談,,,,,,,,,,\n杏戸ゆげ,2026/10/12,【朝活】はやおきのひと～～～✋おはなししよ～～～⏰【杏戸ゆげ/ななしいんく】,https://www.youtube.com/watch?v=-NyFDwccdak,雑談,,,,,,,,,,\n杏戸ゆげ,2026/10/15,束縛…ボイス…だと…？！【杏戸ゆげ/ななしいんく】,https://www.youtube.com/watch?v=GPLTjdssCNo,雑談,,,,,,,,,,\n因幡はねる,2026/10/01,【#ぐみひゃく】松本吉弘＆因幡はねるの「ぐみいん100人できるかな？」第53回ゲスト：小林未沙さん (Mリーグ公式実況)【松本吉弘-まつもとぐみ】,https://youtu.be/zJS-Y7SGZzQ,ゲーム、コラボ、定期枠,ぐみひゃく、雀魂,松本吉弘、小林未沙,,,,,,,,松本吉弘ch\n因幡はねる,2026/10/01,【METAL GEAR SOLID 2】やったか！？→やってない【因幡はねる / ななしいんく】,https://www.youtube.com/watch?v=_ripjcI7Rrw,ゲーム,METAL GEAR SOLID,,,,,,,,,\n因幡はねる,2026/10/02,【METAL GEAR SOLID 2】オタコンショックからまだ立ち直れていない私【因幡はねる / ななしいんく】,https://www.youtube.com/watch?v=sL2ykucmbTU,ゲーム,METAL GEAR SOLID,,,,,,,,,\n因幡はねる,2026/10/04,【METAL GEAR SOLID 3リメイク】本日スタート！METAL GEAR SOLID Δ: SNAKE EATER【因幡はねる / ななしいんく】,https://youtu.be/9aAXocSPUDo,ゲーム,METAL GEAR SOLID,,,,,,,,,\n因幡はねる,2026/10/04,【METAL GEAR SOLID 3リメイク】本日スタート！METAL GEAR SOLID Δ: SNAKE EATER【因幡はねる / ななしいんく】,https://www.youtube.com/watch?v=9aAXocSPUDo,ゲーム,METAL GEAR SOLID,,,,,,,,,\n因幡はねる,2026/10/05,【METAL GEAR SOLID 3リメイク】チュートリアルの前にしぬスネークが見れるのはここだけ！METAL GEAR SOLID Δ: SNAKE EATER【因幡はねる / ななしいんく】,https://www.youtube.com/watch?v=s5R80iixqOc,ゲーム,METAL GEAR SOLID,,,,,,,,,\n因幡はねる,2026/10/06,【速報】無料で漫画が読めるってマジ！？！？！？！？【因幡はねる / ななしいんく】,https://www.youtube.com/watch?v=DQp5p76APGI,雑談,,,,,,,,,,\n因幡はねる,2026/10/08,チュートリアルでつんでしまうアクション苦手Vtuberのメタルギアソリッド,https://www.youtube.com/watch?v=wR1mNJICpJA,雑談,,,,,,,,,,\n因幡はねる,2026/10/15,【METAL GEAR SOLID 3リメイク】画質があがって美女がより美女に！METAL GEAR SOLID Δ: SNAKE EATER【因幡はねる / ななしいんく】,https://www.youtube.com/watch?v=mySAOs1xBaI,ゲーム,METAL GEAR SOLID,,,,,,,,,\n羽流鷲りりり,2026/10/04,久々すぎるギャル豪鬼,https://www.youtube.com/watch?v=2t54B1rt3ho,ゲーム,STREET FIGHTER,,,,,,,,,\n羽流鷲りりり,2026/10/15,【 AMBIQUE 】おうち3D 活力チャージしながらライブに向けて作業雑談💜,https://www.youtube.com/watch?v=GIfnMoardIg,雑談、PR配信,3D,,,,,,,,,\n堰代ミコ,2026/10/01,【 #マイクラ肝試し2026 】残り数日ぅー!?!やだやだまだ遊ぶー!!👻【 堰代ミコ / ななしいんく 】,https://www.youtube.com/watch?v=gTyJVJpCPAA,ゲーム,マイクラ肝試し、マイクラ肝試し2026,,,,,,,,,\n堰代ミコ,2026/10/02,【 #マイクラ肝試し2026 】最後までゲームに縋りついていくゥ！👻あれ...下山は....?【 堰代ミコ / ななしいんく 】,https://www.youtube.com/watch?v=ehUGRGyzylo,ゲーム,マイクラ肝試し、マイクラ肝試し2026,,,,,,,,,\n堰代ミコ,2026/10/04,【 #マイクラ肝試し2026 】最終日！さいごまでいっぱい遊ぶぞぉーッ👻！💓【 📺堰代ミコ視点 / 島村シャルロット 】,https://www.youtube.com/watch?v=aDEsZf479AI,ゲーム,マイクラ肝試し、マイクラ肝試し2026,,,,,,,,,\n堰代ミコ,2026/10/06,【 雑談 】 つかの間の日常、って言葉かっこよすぎない？【 堰代ミコ / ななしいんく 】,https://www.youtube.com/watch?v=aLF2_744Okw,雑談,,,,,,,,,,\n堰代ミコ,2026/10/09,【 Minecraft ver.26.3 】アプデで秋の世界!?座れるクッション!?🍁【 堰代ミコ / ななしいんく 】,https://www.youtube.com/watch?v=wjmGw2EhT9U,ゲーム,マインクラフト,,,,,,,,,\n堰代ミコ,2026/10/13,【 妹に運転を教える 】長女なんで耐えられるかもしれない。【 堰代ミコ / ななしいんく 】,https://www.youtube.com/watch?v=7bkxg2h3ErM,ゲーム,妹に運転を教える,,,,,,,,,\n堰代ミコ,2026/10/14,【 Minecraft 】マ。-建築は運動らしい-【 堰代ミコ / ななしいんく 】,https://www.youtube.com/watch?v=OU71ueUDziQ,ゲーム,マインクラフト,,,,,,,,,\n堰代ミコ,2026/10/15,【 雑談 】 ビデオカメラに記録されてる。【 堰代ミコ / ななしいんく 】,https://www.youtube.com/watch?v=zTPxu0Mk-54,雑談,,,,,,,,,,\n家入ポポ,2026/10/01,【#天下無双ARK / 8日目】パイロメインとか仲間にしたいポポ【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=BR1BsgGPlnE,ゲーム,ARK、天下無双ARK,,,,,,,,,\n家入ポポ,2026/10/02,【#天下無双ARK / 9日目】VSギガノト！テイムするポポォォォ【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=YfLAd0zW298,ゲーム、スト鯖,ARK、天下無双ARK,,,,,,,,,\n家入ポポ,2026/10/03,【#天下無双ARK / 最終日】ラストはみんなで洞窟チャレンジポポだ！！【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=-V63kOGpIBE,ゲーム、スト鯖,ARK、天下無双ARK,,,,,,,,,\n家入ポポ,2026/10/04,【クッキークリッカー雑談】10月、少し肌寒くなってきたかもしれないポポ【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=aK3AfyE8rEs,雑談,クッキークリッカー雑談,,,,,,,,,\n家入ポポ,2026/10/06,YMCAになるポポティア #shorts #家入ポポ #蛇宵ティア #ymcaダンス,https://www.youtube.com/watch?v=IW7HrobDCHw, ,,,,,●,,,,,\n家入ポポ,2026/10/07,【めっちゃカメレオン】アイドルのみんなとかくれんぼポポだ！！【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=_eCxhWqzzdM,コラボ、ゲーム,めっちゃカメレオン,常磐カナメ、鈴鳴すばる、燈舞りん、音門るき、巫てんり、よしか,,,,,,,,\n家入ポポ,2026/10/08,はいみなさんよく出来ました❤︎ 【きゃわぽっぴんどぅー / iLiFE!】 #shorts #踊ってみた #家入ポポ,https://www.youtube.com/watch?v=RKuSS8aWYgs, ,,,,,●,,,,,\n家入ポポ,2026/10/08,【妹に運転を教える】ポもうとがいるし免許も持っている家入ポポ【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=X5FBlleXA1k,ゲーム,妹に運転を教える,,,,,,,,,\n家入ポポ,2026/10/09,【めっちゃカメレオン】10人で交流会を開催ポポッ…！！！！【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=nlvNzM_8Wh0,コラボ、ゲーム,めっちゃカメレオン,玉餅かずよ、夢咲ひぽぽ、Ao WuWu、うる虎がーる、天羅州テラス、篠崎シャノン、キョンシーのCiちゃん、上水流宇宙、鈴鳴すばる,,,,,,,,\n家入ポポ,2026/10/11,【クッキークリッカー雑談】来週ライブを控えている家入ポポ【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=tAPsCLLgKtM,雑談,クッキークリッカー雑談,,,,,,,,,\n家入ポポ,2026/10/12,【SILENT HILL: Townfall #1】霧に包まれた孤島が舞台のサイレントヒル最新作！！【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=wvH6_OzKKqo,ゲーム,SILENT HILL,,,,,,,,,\n家入ポポ,2026/10/13,【BigWalk】#みつあみ部 で謎解きウォークポポ！？【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=DOqG7MQS3aQ,ゲーム、コラボ,BigWalk,上水流宇宙、音門るき、稀羽すう、日向奈央、常盤カナメ,,,,,,,,\n家入ポポ,2026/10/14,【SILENT HILL: Townfall #2】謎解き自信ネキとセントアメリア観光【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=k8vfa6LwJew,ゲーム,SILENT HILL,,,,,,,,,\n家入ポポ,2026/10/15,【SILENT HILL: Townfall #3】パワハラに断固として戦う姿勢を見せるポポ【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=UvoGvmueab0,ゲーム,SILENT HILL,,,,,,,,,\n花奏かのん,2026/10/15,【重大発表】2つあります！予想してるであろうアレと、たぶん予想外なアレ【花奏かのん / ななしいんく】,https://www.youtube.com/watch?v=qf2E_s3nUgs,雑談,,,,,,,,,,\n季咲あんこ,2026/10/02,【 きんようびの朝枠 】10月さいしょのきんようび～～🎃✧！【 季咲あんこ / ななしいんく 】,https://www.youtube.com/watch?v=0xKawbtYzYc,雑談,行ってきますって言って！,,,,,,,,,\n季咲あんこ,2026/10/03,【 ペーパーマリオRPG 】#11 カゲの女王 vs あんこ 👻🔥【 季咲あんこ / ななしいんく 】,https://www.youtube.com/watch?v=0BoujAzJplo,ゲーム,ペーパーマリオRPG ,,,,,,,,,\n季咲あんこ,2026/10/04,【 原神 】- 空月の歌第9幕 - 「 身土壊空、五蘊識転 」【 季咲あんこ / ななしいんく 】,https://www.youtube.com/watch?v=yyT1dHBnlN8,ゲーム,原神,,,,,,,,,\n季咲あんこ,2026/10/06,【 Stardew Valley 】5年目あき4かめ～！今日はジオードあつめだ✧！【 季咲あんこ / ななしいんく 】,https://www.youtube.com/watch?v=qq-Axf0TFpc,ゲーム、コラボ,Stardew Valley,白百合リリィ,,,,,,,,\n季咲あんこ,2026/10/10,【 雑談 】またーりしてきたお話するばしょ。🌸【 季咲あんこ / ななしいんく 】,https://www.youtube.com/watch?v=i73OoODu2UY,雑談,,,,,,,,,,\n季咲あんこ,2026/10/11,【 原神 】- 空月の歌第10幕 - 「 千尋の道、因果の異滅 」【 季咲あんこ / ななしいんく 】,https://www.youtube.com/watch?v=kreGULFNnH0,ゲーム,原神,,,,,,,,,\n季咲あんこ,2026/10/13,【 ペーパーマリオRPG 】#12 リベンジ！カゲの女王 vs あんこ 👻🔥【 季咲あんこ / ななしいんく 】,https://www.youtube.com/watch?v=rH2YOw2JD2U,ゲーム,ペーパーマリオRPG ,,,,,,,,,\n季咲あんこ,2026/10/15,【 Stardew Valley 】5年目あき15にちめ～！今日はダチョウ飼うよ～✧！【 季咲あんこ / ななしいんく 】,https://www.youtube.com/watch?v=I5lct0N5IcA,ゲーム、コラボ,Stardew Valley,白百合リリィ,,,,,,,,\n月野木ちろる,2026/10/02,【ASMR┆睡眠導入】　…あ。見つかっちゃいました…？　真夜中にこっそり耳かき練習…💤　耳ふぅ┆囁き┆吐息┆Binaural┆Ear Blowing for Sleep　【月野木ちろる/ななしいんく】,https://www.youtube.com/watch?v=yM2Zxb4Ba3M,ASMR,,,,,,,,,,\n月野木ちろる,2026/10/02,【実写×編み物】　お花のコースター、ポーチ、リボンコースター…編みたいものが多すぎる…!　#かぎ針 #棒針編み #編み物 #手芸 　【月野木ちろる‐Tirol Tsukinoki‐/ななしいんく】,https://www.youtube.com/watch?v=15dsYOYR5xw,雑談,実写有,,,,,,,,,\n月野木ちろる,2026/10/03,【睡眠導入×編み物】　眠れない人が辿り着く癒しの編み物工房はこちら🌙🌲　勉強・作業のお供にも…🌿　#かぎ針 #棒針 #編み物 #手芸 　【月野木ちろる‐Tirol Tsukinoki‐/ななしいんく】,https://www.youtube.com/watch?v=ocM25X77thw,雑談,実写有,,,,,,,,,\n月野木ちろる,2026/10/06,【睡眠導入×編み物】  眠れない人が辿り着く癒しの編み物工房🌙🌲不眠解消ニットセラピー 勉強・作業のお供にも…🌿　#かぎ針 #棒針 #編み物 #手芸 　【月野木ちろる/ななしいんく】,https://www.youtube.com/watch?v=ydrEy4L2vH8,雑談,実写有,,,,,,,,,\n月野木ちろる,2026/10/10,【睡眠導入×編み物】眠れない人がたどり着く編み物工房🌙🌲癒しの声と手編みのぬくもりで不眠解消ニットセラピー💊 勉強・作業のお供にも…🌿　#かぎ針 #棒針 #編み物 #手芸【月野木ちろる/ななしいんく】,https://www.youtube.com/watch?v=jgj7NB7xPls,雑談,実写有,,●,,,,配信終了後にメンバーシップ限定配信に移行,,,\n湖南みあ,2026/10/02,【こく兄】格ゲー界の面白お兄さんとひたすら飲む！【湖南みあ】,https://www.youtube.com/watch?v=kRueGoHsxZY,雑談、コラボ,,こく兄,,,,,,,,\n湖南みあ,2026/10/03,【雀魂】すごいメンツで麻雀やる。歌衣メイカ/米将軍/緑青くれは【湖南みあ】,https://www.youtube.com/watch?v=zIiZX4GZykU,コラボ、ゲーム,麻雀、雀魂,歌衣メイカ、米将軍、緑青くれは,,,,,,,,\n湖南みあ,2026/10/09,デートキャンセルされた。でもそれでよかった。,https://www.youtube.com/watch?v=Bdlzps0_vW4,雑談,飲酒,,,,,,,,,\n湖南みあ,2026/10/13,正直に話します。 #shorts,https://www.youtube.com/watch?v=HFI7VOVYvmk, ,,,,,●,,,,,\n瑚白ユリ,2026/10/01,落ち着いてください、眠り姫なんです【瑚白ユリ / ななしいんく】,https://www.youtube.com/watch?v=5XcCy2jCq6w,雑談,,,,,,,,,,\n瑚白ユリ,2026/10/07,【妹に運転を教える】お兄ちゃん的にお前にはまだ早いと思うんだ【瑚白ユリ / ななしいんく】,https://www.youtube.com/watch?v=90Qanp8mbGQ,ゲーム,妹に運転を教える,,,,,,,,,\n汐鳴みりね,2026/10/01,【ゼルダの伝説 ブレワイ】完全初見🔰ついにガノンと闘います。# 最終回【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=K7blxuV2168,ゲーム,ゼルダの伝説,,,,,,,,,\n汐鳴みりね,2026/10/01,『金木犀』歌いました。【汐鳴みりね / ななしいんく】#vtuber  #歌ってみた #くじら  #金木犀,https://www.youtube.com/watch?v=hF4RrMxTVp0, ,,,,,●,,,,,\n汐鳴みりね,2026/10/03,【縦型歌枠】歌うぞぉぉぉ～～～～～！！【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=KFY8XEp7l7Y,歌枠,,,,,,,,,,\n汐鳴みりね,2026/10/05,【定期あさ枠】朝からお話ししましょ～！ #あさにょ【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=EHRKhbSsmqI,雑談,あさにょ,,,,,,,,,\n汐鳴みりね,2026/10/06,【Detroit: Become Human】前回は誰も救えなかった。今回絶対この三人を救うんだ。二週目ｲｸｿﾞｫｫｫ！！！【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=ztUWeDsCUDQ,ゲーム,Detroit: Become Human,,,,,,,,,\n汐鳴みりね,2026/10/06,【アカペラ】金木犀歌いました。【汐鳴みりね / ななしいんく】#vtuber  #歌ってみた #くじら  #金木犀,https://www.youtube.com/watch?v=DMs_zKXIYf8, ,,,,,●,,,,,\n汐鳴みりね,2026/10/07,ゲリラ。少しだけ歌う【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=r3wnhyPbxOY,歌枠,,,,,,,,,,\n汐鳴みりね,2026/10/09,【Detroit: Become Human】開けろ！デトロイト市警だ！【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=FOfI3tustEs,ゲーム,Detroit: Become Human,,,,,,,,,\n汐鳴みりね,2026/10/09,「Song for...」アカペラ無加工で歌ってみた！#vtuber  #歌ってみた #hy   #songfor,https://www.youtube.com/watch?v=LA4XA4kDzVw, ,,,,,●,,,,,\n汐鳴みりね,2026/10/10,【縦型歌枠】お昼から歌います！！！【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=awfuZSwP544,歌枠,,,,,,,,,,\n汐鳴みりね,2026/10/11,【⚠️実写手元あり】スクイーズ紹介＆開封配信！メロジョイやぷにっこ開ける🎶【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=3fPClTEaBWE,企画,実写有,,,,,,,,,\n汐鳴みりね,2026/10/12,【定期あさ枠】祝日の朝から早起きしている方えらすぎます。 #あさにょ【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=me2IO3IdSLc,雑談,あさにょ,,,,,,,,,\n汐鳴みりね,2026/10/13,『ハロ／ハワユ』歌いました。【汐鳴みりね / ななしいんく】#shorts  #新人Vtuber #歌ってみた  #ハロハワユ,https://www.youtube.com/watch?v=N8aFrKOh2FU, ,,,,,●,,,,,\n汐鳴みりね,2026/10/14,大丈夫って言うの、ちょっと疲れちゃった君へ。『ハロ／ハワユ』歌ってみた。【汐鳴みりね / ななしいんく】#shorts  #新人Vtuber #歌ってみた  #ハロハワユ,https://www.youtube.com/watch?v=0JZmKRWzT_o, ,,,,,●,,,,,\n汐鳴みりね,2026/10/15,みんなと話したいんだ！【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=UkXyXD-XwMI,雑談,,,,,,,,,,\n漆瀬レイ,2026/10/01,【朝枠】もにれでぃ！☀ 食欲と食欲と食欲の秋【漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=0-LWPDXK2gk,雑談,もにれでぃ！,,,,,,,,,\n漆瀬レイ,2026/10/02,【 勝利の女神：NIKKE 】完全初見🔰イベントストーリー「OVER ZONE」STORY2を見る‼【漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=L1yoLVNc6Pc,ゲーム,NIKKE,,,,,,,,,\n漆瀬レイ,2026/10/03,【 P5R/ペルソナ5 ザ・ロイヤル 】完全初見🔰人生初のペルソナ！！✨※ネタバレ注意 #05【漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=QAZsexskeDU,ゲーム,ペルソナ,,,,,,,,,\n漆瀬レイ,2026/10/04,その日、人類は思い出した… 【漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=vSyvQnOxC5o,雑談,,,,,,,,,,\n漆瀬レイ,2026/10/05,【メン限】同時視聴🍿劇場版『チェンソーマン レゼ篇』一緒に見よ～！！【漆瀬レイ / ななしいんく】,https://youtu.be/kSJH_qEBO3I,同時視聴,,,●,,,,,,,\n漆瀬レイ,2026/10/06,【 P5R/ペルソナ5 ザ・ロイヤル 】完全初見🔰人生初のペルソナ！！✨※ネタバレ注意 #06【漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=BUeCwzvfSsY,ゲーム,ペルソナ,,,,,,,,,\n漆瀬レイ,2026/10/07,【朝枠】もにれでぃ！☀ 実は…君に伝えたいことがあって……【漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=I13NC-F0QG4,雑談,もにれでぃ！,,,,,,,,,\n漆瀬レイ,2026/10/07,【 勝利の女神：NIKKE 】完全初見🔰イベントストーリー「COIN RUSH SHOWDOWN」一気見‼【漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=zFuTyPCTdEc,ゲーム,NIKKE,,,,,,,,,\n漆瀬レイ,2026/10/08,【 テストプレイをサボりすぎたＲＰＧ 】いやサボんなよ。【漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=fJzL_xwGO7k,ゲーム,テストプレイをサボりすぎたＲＰＧ,,,,,,,,,\n漆瀬レイ,2026/10/10,終電…なくなったかも……【漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=CV6yMwU8yXs,雑談,,,,,,,,,,\n漆瀬レイ,2026/10/11,ブ。VTuberの1日の歩数について #shorts #vtuber #新人VTuber #ななしいんく,https://www.youtube.com/watch?v=lhGxQW_Qxus, ,,,,,●,,,,,\n漆瀬レイ,2026/10/12,【朝枠】目覚ましなしで事務所に集合するとかヌルゲーだろｗｗｗ【 #ここ瀬レイ汰の限界突破 / 漆瀬レイ / ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=QtGBreO5zeU,コラボ、企画,,ここ・じぇす汰,,,,,,,,\n漆瀬レイ,2026/10/13,【 P5R/ペルソナ5 ザ・ロイヤル 】完全初見🔰人生初のペルソナ！！✨※ネタバレ注意 #07【漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=pNIjn2SadZo,ゲーム,ペルソナ,,,,,,,,,\n漆瀬レイ,2026/10/14,【朝枠】もにれでぃ！☀ 魔法少女になりたい朝だってある【漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=eYtsxCE7cAc,雑談,もにれでぃ！,,,,,,,,,\n漆瀬レイ,2026/10/14,【 勝利の女神：NIKKE 】完全初見🔰イベントストーリー「MIRACLE SNOW」一気見‼【漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=-OC7R2SmNXM,ゲーム,NIKKE,,,,,,,,,\n漆瀬レイ,2026/10/15,リスナーからの辛辣すぎる正論でブチ切れる漆瀬レイ #shorts #vtuber #新人VTuber #ななしいんく,https://www.youtube.com/watch?v=nidw21t-DGc, ,,,,,●,,,,,\n蛇宵ティア,2026/10/01,【 JumpKing 】誕生日に初の鬼畜ゲー👹 クリア耐久しながら箱内外仲良しさんに応援してもらう！【蛇宵ティア / ななしいんく】,https://www.youtube.com/watch?v=ilwbnBQwkfg,ゲーム、記念配信、凸待ち,JumpKing,,,,,,,,,\n蛇宵ティア,2026/10/01,【 JumpKing 次枠 】20時からのチケ発で完売を目指して！まだまだいくぞ～！【蛇宵ティア / ななしいんく】#蛇宵ティア誕生日2026,https://www.youtube.com/watch?v=woKNZ3Mr9yI,ゲーム、記念配信、凸待ち,JumpKing,,,,,,,,,\n蛇宵ティア,2026/10/01,初のオリジナル曲がなんとDance short MVで!? Soloist / 蛇宵ティア【 Dance short MV 】#shorts #オリ曲,https://www.youtube.com/watch?v=RR1UFt4b36w, ,,,,,●,,,,,\n蛇宵ティア,2026/10/01,【 オリジナル曲 】Soloist / 蛇宵ティア【 short Dance MV 】,https://www.youtube.com/watch?v=T3IONQTl2Hk, ,,,,●,,,,,,\n蛇宵ティア,2026/10/02,【 #踊ってみた 】みんなで一緒に～？ YMCA / Village People【 蛇宵ティア / ななしいんく 】#shorts #ymca,https://www.youtube.com/watch?v=TIxdeWA9SjM, ,,,,,●,,,,,\n蛇宵ティア,2026/10/02,【 #蛇宵ティア誕生日2026 】後夜祭で甘いもの食べながら色々語りたい🍰【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=t9zSktx_DrQ,記念配信,,,,,,,,,,\n蛇宵ティア,2026/10/03,【 #踊ってみた 】好きにな～る♡🌀 洗脳 / DECO*27 【 蛇宵ティア / ななしいんく 】#shorts #洗脳 #deco27,https://www.youtube.com/watch?v=UJP8UGZ_2vI,ゲーム,,,,,●,,,,,\n蛇宵ティア,2026/10/03,【 Fallout 3 #3 】サバイバルに必要なことを知っていきましょう👀【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=Q1zUsUH5W1s,ゲーム,Fallout 3,,,,,,,,,\n蛇宵ティア,2026/10/04,【おは宵31時 】10月入ってしまいましたね💭 【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=P0p9HAR8qAM,雑談、定期枠,おは宵31時,,,,,,,,,\n蛇宵ティア,2026/10/04,【 #踊ってみた 】サキミダレアッパレード / さくらみこ【 蛇宵ティア / ななしいんく 】#shorts #ホロライブ #さくらみこ,https://www.youtube.com/watch?v=trFJE29dYCc, ,,,,,●,,,,,\n蛇宵ティア,2026/10/05,【 #踊ってみた 】わがままで何が悪い！ / hiroki.【 蛇宵ティア / ななしいんく 】#shorts #わがままで何が悪い #重音テト,https://www.youtube.com/watch?v=EOvTpsoR7ZA, ,,,,,●,,,,,\n蛇宵ティア,2026/10/06,【 #踊ってみた 】Magic / 3SKM【 蛇宵ティア / ななしいんく 】#shorts #3skm #magic,https://www.youtube.com/watch?v=XTKDhN9_FeM, ,,,,,●,,,,,\n蛇宵ティア,2026/10/06,【 Fallout 3 #4】お父さんの意思を背負って【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=Z_gn0P5T-Nw,ゲーム,Fallout 3,,,,,,,,,\n蛇宵ティア,2026/10/07,【 #踊ってみた 】懐かしい曲🦋 極楽浄土 / GARNiDELiA【 蛇宵ティア / ななしいんく 】#shorts #極楽浄土 #garnidelia,https://www.youtube.com/watch?v=jdDpqrN4Guc, ,,,,,●,,,,,\n蛇宵ティア,2026/10/07,【頑張った日】たまには酒を飲もうぜ【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=F4KjPPuiG9o,雑談,飲酒,,,,,,,,,\n蛇宵ティア,2026/10/08,【 #踊ってみた 】パジャマパーティーずのうた / ちいかわ【 蛇宵ティア / ななしいんく 】#shorts #ちいかわ #パジャマパーティーズ,https://www.youtube.com/watch?v=uwBXysaLsW4, ,,,,,●,,,,,\n蛇宵ティア,2026/10/08,あの踊りのうまいVtuber蛇宵さんを檻に確保しました【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=tI7XYn42Wic,雑談,,,,,,,,,,\n蛇宵ティア,2026/10/08,【 Minecraft 】489(神話級)個鉄が取れるまでぎょん女でマイクラハードコア【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=nrGAWscqXnI,ゲーム,マインクラフト,,,,,,,,,\n蛇宵ティア,2026/10/09,回りながら失礼します🌀 回レ！雪月花 / 歌組雪月花【 蛇宵ティア / ななしいんく 】#shorts #回レ雪月花 #機巧少女は傷つかない,https://www.youtube.com/watch?v=UAmNb4DWFzQ, ,,,,,●,,,,,\n蛇宵ティア,2026/10/10,【 Alchemy Factory #3 】とうとうセージ地獄やってきましたか【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=Sv1s0_lRB3Q,ゲーム,Alchemy Factory,,,,,,,,,\n蛇宵ティア,2026/10/10,【 #踊ってみた 】バレエ風味で #テキトーダンス / 葛葉【 蛇宵ティア / ななしいんく 】#shorts #葛葉 #テキトーリョク,https://www.youtube.com/watch?v=vg9bFEu-32o, ,,,,,●,,,,,\n蛇宵ティア,2026/10/11,【おは宵31時 】浮気チェック、君はどうするの？💭 【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=CcbA6qDa0pc,雑談、定期枠,おは宵31時,,,,,,,,,\n蛇宵ティア,2026/10/11,【 5分で覚えて #踊ってみた 】Yes!東京 / EBiDAN(恵比寿学園男子部) 【 蛇宵ティア / ななしいんく 】#shorts #ebidan #yes東京,https://www.youtube.com/watch?v=zAtS8D78lk8, ,,,,,●,,,,,\n蛇宵ティア,2026/10/11,【 Fallout 3 #5】おい！エンクレイヴ！返せよ！【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=kJUDQ5YI5gg,ゲーム,Fallout 3,,,,,,,,,\n蛇宵ティア,2026/10/12,【 #踊ってみた 】結び / Ayumu Imazu【 蛇宵ティア / ななしいんく 】#shorts #結び #ayumuimazu,https://www.youtube.com/watch?v=uyiR1SIN0Ks, ,,,,,●,,,,,\n蛇宵ティア,2026/10/12,家の前にグッズもって来てみたんですけどいかがですか～【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=r50Qf65DN0E,雑談,,,,,,,,,,\n蛇宵ティア,2026/10/13,【 #踊ってみた 】#承認欲求チャレンジ ハートにピース / 鷹嶺ルイ【 蛇宵ティア / ななしいんく 】#shorts #ハートにピース #鷹嶺ルイ,https://www.youtube.com/watch?v=X3NGkuAb7S4, ,,,,,●,,,,,\n蛇宵ティア,2026/10/13,【 AMBIQUE 】手元カメラで事前お届けグッズのポストカードにサインしながら活力チャージ🔥【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=HVZHssAWB-Q,PR配信,実写有,,,,,,,,,\n蛇宵ティア,2026/10/14,どうか聞いてください【 蛇宵ティア / ななしいんく 】#shorts,https://www.youtube.com/watch?v=BFnEZkajWyk, ,,,,,●,,,,,\n蛇宵ティア,2026/10/14,【 #SURGECity 】みんな何してんの～？爆撃散歩ニストです♡【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=v4O_WQWM3X8,ゲーム、スト鯖,SURGECity,,,,,,,,,\n蛇宵ティア,2026/10/15,【 #踊ってみた 】モンスターファクトリー / Kizuna AI【 蛇宵ティア / ななしいんく 】#shorts #キズナアイ #モンスターファクトリー,https://www.youtube.com/watch?v=Tcq2WstZuUk, ,,,,,●,,,,,\n蛇宵ティア,2026/10/15,【 マシュマロ読み 】なんでもお答えします、助けてください【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=Zz2_G4j1VD4,雑談,マシュマロ読み,,,,,,,,,\n蛇宵ティア,2026/10/16,【 人望調査凸待ち 前編 】蛇宵ティアには人望があるのか調査してみます！🔍【 蛇宵ティア / ななしいんく 】,https://youtu.be/n_Y8P5XX93A,凸待ち,,瀬島るい、家入ポポ、天羽衣、天絆ささは、アズリ、ここ・じぇす汰、漆瀬レイ,,●,,,,,,\n宗谷いちか,2026/10/03,#4【ゼノブレイド2】初見プレイ✨楽園を目指す少年少女の物語が始まる‼️【宗谷いちか /ななしいんく】,https://www.youtube.com/watch?v=kcSeWuHM6y4,ゲーム,ゼノブレイド,,,,,,,,,\n宗谷いちか,2026/10/04,#5【ゼノブレイド2】初見プレイ✨楽園を目指す少年少女の物語が始まる‼️【宗谷いちか /ななしいんく】,https://www.youtube.com/watch?v=nkiMvTZ4ObQ,ゲーム,ゼノブレイド,,,,,,,,,\n宗谷いちか,2026/10/06,【 しせラジ 】朝ラジオ🌸早起きした子大集合～～～！！！💕【宗谷いちか /ななしいんく】,https://www.youtube.com/watch?v=T17EO5dzafs,雑談、定期枠,しせラジ,,,,,,,,,\n宗谷いちか,2026/10/10,#6【ゼノブレイド2】初見プレイ✨楽園を目指す少年少女の物語が始まる‼️【宗谷いちか /ななしいんく】,https://www.youtube.com/watch?v=gL2kTBlrOjc,ゲーム,ゼノブレイド,,,,,,,,,\n宗谷いちか,2026/10/11,萌え萌えVtuber、みんなに「寝ないで」を言いまくる,https://www.youtube.com/watch?v=AJZYePj1Bww,雑談,,,,,,,,,,\n宗谷いちか,2026/10/12,【#ななしスポフェス】スポーツの日は無礼講、ガチ勝負で燃え上がれ────。🔥🔥【宗谷いちか /ななしいんく】,https://www.youtube.com/watch?v=wm4v2oWWbOg,ゲーム、コラボ,ななしスポーツフェス,堰代ミコ、季咲あんこ、龍ヶ崎リン、瀬島るい、飛良ひかり、茜音カンナ、日向ましゅ、汐鳴みりね,,,,,,,,\n宗谷いちか,2026/10/13,【 しせラジ 】朝ラジオ🌸早起きした子大集合～～～！！！💕【宗谷いちか /ななしいんく】,https://www.youtube.com/watch?v=HKV2GvMgBoA,雑談、定期枠,しせラジ,,,,,,,,,\n外部,2026/10/05,\"新クトゥルフ神話TRPG『奇妙な共闘』堰代ミコ,宗谷いちか,龍ヶ崎リン\",https://youtu.be/BXXosJjqmfk,コラボ、TRPG,TRPG 奇妙な共闘,宗谷いちか、堰代ミコ、龍ヶ崎リン、ディズム,,,,,,,,\n瀬島るい,2026/10/01,【 Neighbors: Suburban Warfare 】隣人の家を破壊せよ！？【 飛良ひかり┋瀬島るい┋ななしいんく】,https://www.youtube.com/watch?v=bra0JX4En6w,コラボ、ゲーム,Neighbors: Suburban Warfare、ひかるいティータイム,飛良ひかり,,,,,,,,\n瀬島るい,2026/10/02,【 朝活 】初見さんもおはよ💗もう一週間！？今日は2回行動🐶💉【 瀬島るい┋ななしいんく】,https://www.youtube.com/watch?v=r75uIHHJpTA,雑談,朝金出勤せしナース,,,,,,,,,\n瀬島るい,2026/10/03,看護師になってほしいなと思う意外な人3選 #shorts #看護師あるある,https://www.youtube.com/watch?v=uv7oKIUjgIQ, ,,,,,●,,,,,\n瀬島るい,2026/10/05,【 #キリンカップ  】遂に決勝🏆無料同時視聴⚽初見さんも応援💗🐶💉【  光りりあ┋瀬島るい┋ななしいんく】,https://www.youtube.com/watch?v=IOoUixrfJD8,コラボ、企画、同時視聴,,光りりあ,,,,,,,,\n瀬島るい,2026/10/06,【 雑談 】窓　あ　い　て　る　よ　？　【 瀬島るい┋ななしいんく 】,https://www.youtube.com/watch?v=yPSV0yhRuSM,雑談,,,,,●,,,,,\n瀬島るい,2026/10/07,【 #あかいんく 】あかいんくがドライブデートで帰ってきた！【  龍ヶ崎リン┋茜音カンナ┋汐鳴みりね┋瀬島るい┋ななしいんく】,https://www.youtube.com/watch?v=sa6Na6wi6v0,コラボ、雑談,,龍ヶ崎リン、茜音カンナ、汐鳴みりね,,,,,,,,\n瀬島るい,2026/10/09,【 朝活 】初見さんもおはよ💗活動5年の最後の朝🐶💉【 瀬島るい┋ななしいんく】,https://www.youtube.com/watch?v=aR0-XkTiT0s,雑談、定期枠,朝金出勤せしナース,,,,,,,,,\n瀬島るい,2026/10/09,【 #ひかるい6周年 】じゃんけんに勝たねば重大告知できません⁉✊✌✋【 飛良ひかり┋瀬島るい┋ななしいんく】,https://www.youtube.com/watch?v=375TTmj7W9s,コラボ、記念配信,凸待ち,飛良ひかり、宗谷いちか、茜音カンナ、蛇宵ティア、日向ましゅ、ここ・じぇす汰,,,,,,,,\n瀬島るい,2026/10/10,【 歌ってみた 】気ままな天使たち / わたてん☆5【 covered-飛良ひかり＆瀬島るい┋ななしいんく】,https://www.youtube.com/watch?v=HXMchcqaMAY,歌ってみた,,,,●,,,,,,\n瀬島るい,2026/10/10,看護師が仕事中に飲み込んだ言葉3選 #shorts #看護師あるある,https://www.youtube.com/watch?v=u0vtY5sROXE, ,,,,,●,,,,,\n瀬島るい,2026/10/12,緊　急　で　配　信　を　回　し　て　い　ま　す　【 瀬島るい┋ななしいんく 】,https://www.youtube.com/watch?v=6i9SxN4I_CU,雑談,,,,,,,,,,\n瀬島るい,2026/10/12,【 初体験 】メロジョイが欲しすぎてゲーセンでスクイーズ大量GET！開封＆ランキング紹介 #squishy【 瀬島るい┆ななしいんく】,https://www.youtube.com/watch?v=BNo9c79b8Ds, ,,,,●,,,,,,\n瀬島るい,2026/10/13,【 #そやしま 】ハロウィン気分で飲んで語って騒いじゃお！【 宗谷いちか┋瀬島るい┋ななしいんく】,https://www.youtube.com/watch?v=164dzaqXGiM,コラボ、雑談,,瀬島るい,,,,,,,,\n瀬島るい,2026/10/14,聴いたことあるような歌詞ワードセンスで導く島村シャルロット #瀬島るい #shorts,https://www.youtube.com/watch?v=cwpWOSbBNKM, ,,,,,●,,,,,\n瀬島るい,2026/10/14,【 閲覧注意 】浮気判定シートに挑戦⁉本音でいかせていただきます❕　【 瀬島るい┋ななしいんく 】,https://www.youtube.com/watch?v=7k2tPeb6Ttc,雑談,浮気判定シート,,,,,,,,,\n西園寺メアリ,2026/10/01,泥酔で人狼したらやばかったwww #切り抜き #ななし酔っ払い人狼,https://www.youtube.com/watch?v=X8hNkQOeW3w, ,,,,,●,,,,,\n西園寺メアリ,2026/10/02,よっぱっぱが出来上がるまで  #切り抜き #vtuber,https://www.youtube.com/watch?v=P-QtchbiSDs, ,,,,●,,,,,,\n西園寺メアリ,2026/10/02,【食わず嫌い対決】バレるな！嫌いなものを好物のフリして食べろ！   #爆烈夜会【西園寺メアリ / ななしいんく】,https://www.youtube.com/watch?v=rBeFwOmbGhQ,コラボ、企画,爆裂夜会、食わず嫌い,瀬島るい、茜音カンナ、羽流鷲りりり,,,,,,,,\n西園寺メアリ,2026/10/03,【料理配信】鮭ときのこのグラタンを作って、ホカホカしちゃおう！【西園寺メアリ / ななしいんく】,https://www.youtube.com/watch?v=qioK0d19tdk,料理,,,,,,,,,,\n西園寺メアリ,2026/10/04,【夢物語の街】まったり部屋づくり！ドット絵お片付け【西園寺メアリ / ななしいんく】,https://www.youtube.com/watch?v=SV3eMxPEvhk,ゲーム,夢物語の街,,,,,,,,,\n西園寺メアリ,2026/10/04,確定！うまい！大根豚キムチ炒め #vtuber #cooking #元気復活飯,https://www.youtube.com/watch?v=IkJijsbYJcc, ,,,,●,,,,,,\n西園寺メアリ,2026/10/05,【朝活】癒しと元気をお届け！いってらっしゃいラジオ【西園寺メアリ / ななしいんく】,https://www.youtube.com/watch?v=UfRq2ZWPt1k,雑談,いってらっしゃいラジオ,,,,,,,,,\n西園寺メアリ,2026/10/08,【ASMR】よしよし頭なでなで！そばにいるよ。【西園寺メアリ / ななしいんく】,https://www.youtube.com/watch?v=APbYeJgWNNA,ASMR,,,,,,,,,,\n西園寺メアリ,2026/10/09,【Core Keeper】無料期間だし遊んでみたかった！完全初見の探掘！【西園寺メアリ / ななしいんく】,https://www.youtube.com/watch?v=TZja2SgCQ3w,ゲーム,Core Keeper,,,,,,,,,\n西園寺メアリ,2026/10/10,【釣り/雑談】ゆるーく釣りしながらしゃべりたいんだ /ultimate fishing simulator【西園寺メアリ / ななしいんく】,https://www.youtube.com/watch?v=IMSlee9ptWg,雑談、ゲーム,ultimate fishing simulator,,,,,,,,,\n西園寺メアリ,2026/10/11,ハイパー回復飯、メンチカツ！！ #vtuber #cooking #元気復活飯,https://www.youtube.com/watch?v=cqJVMzDpDF0, ,,,,●,,,,,,\n西園寺メアリ,2026/10/12,【いってらっしゃいラジオ】週の初めに聞く朝ラジオ！【西園寺メアリ / ななしいんく】,https://www.youtube.com/watch?v=CChe1cRu16Q,雑談,いってらっしゃいラジオ,,,,,,,,,\n西園寺メアリ,2026/10/12,【Core Keeper】初見探屈は、ワクワクするなぁ！ part2【西園寺メアリ / ななしいんく】,https://www.youtube.com/watch?v=UUjLjYIt9Mc,ゲーム,Core Keeper,,,,,,,,,\n西園寺メアリ,2026/10/12,キムチ鍋でキマる！冷蔵庫の余りで  #vtuber #cooking #元気復活飯,https://www.youtube.com/watch?v=bYXnDlLhxpQ, ,,,,●,,,,,,\n西園寺メアリ,2026/10/14,【ASMR】ママの心音、抱きしめ Heartbeat/Sleepy Breathing【西園寺メアリ / ななしいんく】,https://www.youtube.com/watch?v=jKAs6ep-4os,ASMR,,,,,,,,,,\n西園寺メアリ,2026/10/15,【メンバー限定配信】認めたくないものだな。片付けを後回しにしたツケというものを…【西園寺メアリ / ななしいんく】,https://youtu.be/MAI9pbbkrY8,雑談,,,●,,,,,,,\n天羽衣,2026/10/03,☾ ໋〖 !owcs 〗OWCSミラーKR２日目です .ᐟ.ᐟ〖 天羽衣🤍ななしいんく 〗,,ゲーム、同時視聴,Overwatch,,,,,●,,,,\n天羽衣,2026/10/04,☾ ໋ #3〖 トルネコの大冒険 〗深夜チルで完全初見トルネコです .ᐟ.ᐟ🗡#トルネコの大冒険不思議のダンジョンちょっとステキなリマスター〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=WKkP65ZJAA8,ゲーム,トルネコの大冒険,,,,,,,,,\n天羽衣,2026/10/04,☾ ໋〖 Morning stream 〗もうあっという間に10月です .ᐟ.ᐟ⏰#朝羽衣〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=ozp1Y9DTuo8,雑談,朝羽衣,,,,,,,,,\n天羽衣,2026/10/04,☾ ໋〖 鬼畜 〗見ざる聞かざる言わざるたちは爆弾解除できるのか .ᐟ.ᐣ🍌#BOMBANANA! #ういひかましゅ〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=csMIsDPZmjc,ゲーム、コラボ,BOMBANANA,飛良ひかり、日向ましゅ,,,,,,,,\n天羽衣,2026/10/05,☾ ໋ #4〖 トルネコの大冒険 〗深夜チルで完全初見トルネコです .ᐟ.ᐟ🗡#トルネコの大冒険不思議のダンジョンちょっとステキなリマスター〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=UP4hkNCi4lI,ゲーム,トルネコの大冒険,,,,,,,,,\n天羽衣,2026/10/05,☾ ໋〖 初見殺し 〗トルネコ序盤の強敵に眠らされハメられる天羽衣 #vtuber #short #トルネコの大冒険 #トルネコの大冒険不思議のダンジョンちょっとステキなリマスター,https://www.youtube.com/watch?v=oRtkWnohAe8, ,,,,,●,,,,,\n天羽衣,2026/10/06,☾ ໋〖 フラグ回収 〗逃げちゃお～ｗｗｗ ➡ 結果…… #vtuber #short #トルネコの大冒険 #トルネコの大冒険不思議のダンジョンちょっとステキなリマスター,https://www.youtube.com/watch?v=QSIAOhIjBeA, ,,,,,●,,,,,\n天羽衣,2026/10/06,☾ ໋〖 大殺戮 〗命懸けのデスゲーム開始です.ᐟ.ᐟ 💀#machineparty〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=_z-LQlpaC2c,ゲーム、コラボ,machineparty,アズリ、ここ・じぇす汰、汐鳴みりね,,,,,,,,\n天羽衣,2026/10/07,☾ ໋〖 !コラボ 〗わンちゃんと謎解き協力ゲー We were here togetherです .ᐟ.ᐟ w/わンころ〖 天羽衣🤍ななしいんく 〗,,雑談、コラボ,We were here together,わンころ,,,,●,,,,\n天羽衣,2026/10/07,☾ ໋ #5〖 トルネコの大冒険 〗深夜チルで完全初見トルネコです .ᐟ.ᐟ🗡#トルネコの大冒険不思議のダンジョンちょっとステキなリマスター〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=2WLT3sc4QIw,ゲーム,トルネコの大冒険,,,,,,,,,\n天羽衣,2026/10/07,☾ ໋〖 オワタ 〗念願の武器をミスって捨ててしまい絶望www #vtuber #short #トルネコの大冒険 #トルネコの大冒険不思議のダンジョンちょっとステキなリマスター,https://www.youtube.com/watch?v=XUYja-r4GUM, ,,,,,●,,,,,\n天羽衣,2026/10/08,☾ ໋〖 !Drops✅ 〗はじめまして、新キャラ初触りです .ᐟ.ᐟ〖 天羽衣🤍ななしいんく 〗,,ゲーム,Overwatch,,,,,●,,,,\n天羽衣,2026/10/08,☾ ໋ #6〖 トルネコの大冒険 〗深夜チルで完全初見トルネコです .ᐟ.ᐟ🗡#トルネコの大冒険不思議のダンジョンちょっとステキなリマスター〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=zs6Qn_TLHog,ゲーム,トルネコの大冒険,,,,,,,,,\n天羽衣,2026/10/08,☾ ໋〖 即死 〗死にはせんだろwwww ➡ 結果…… #vtuber #short #トルネコの大冒険 #トルネコの大冒険不思議のダンジョンちょっとステキなリマスター,https://www.youtube.com/watch?v=kPfXbeMqwDc, ,,,,,●,,,,,\n天羽衣,2026/10/09,☾ ໋ #7〖 トルネコの大冒険 〗深夜チルで完全初見トルネコです .ᐟ.ᐟ🗡#トルネコの大冒険不思議のダンジョンちょっとステキなリマスター〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=b0gxVXsI6AQ,ゲーム,トルネコの大冒険,,,,,,,,,\n天羽衣,2026/10/09,☾ ໋〖 モラ疑惑 〗AI妹を洗脳する清楚担当Vtuber…❓ #vtuber #short #妹に運転を教える #鬼畜ゲー,https://www.youtube.com/watch?v=WT_uTSqbcF0,,,,,,●,,,,,\n天羽衣,2026/10/10,☾ ໋〖 !Drops✅ 〗OWCS KRミラーです .ᐟ.ᐟ〖 天羽衣🤍ななしいんく 〗,,ゲーム、同時視聴,Overwatch,,,,,●,,,,\n天羽衣,2026/10/10,☾ ໋ #8〖 トルネコの大冒険 〗深夜チルで完全初見トルネコです .ᐟ.ᐟ🗡#トルネコの大冒険不思議のダンジョンちょっとステキなリマスター〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=X4emJNaauEA,ゲーム,トルネコの大冒険,,,,,,,,,\n天羽衣,2026/10/10,☾ ໋〖 カオス 〗ブルブルマシンに乗ってバランスホラゲに挑戦した結果www #Don'tDropTheCake #vtuber #short #ななしいんく #天羽衣 #鬼畜ゲー,https://www.youtube.com/watch?v=GJLEVXcwl6g, ,,,,,●,,,,,\n天羽衣,2026/10/11,☾ ໋ #9〖 トルネコの大冒険 〗深夜チルで完全初見トルネコです .ᐟ.ᐟ🗡#トルネコの大冒険不思議のダンジョンちょっとステキなリマスター〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=T0Hbp4iLiWA,ゲーム,トルネコの大冒険,,,,,,,,,\n天羽衣,2026/10/11,☾ ໋〖 大沼 〗詰むのが早すぎる天羽衣の不憫トルネコ #vtuber #short #トルネコの大冒険 #トルネコの大冒険不思議のダンジョンちょっとステキなリマスター,https://www.youtube.com/watch?v=4gMyfGhqLsw, ,,,,,●,,,,,\n天羽衣,2026/10/12,☾ ໋ #10〖 トルネコの大冒険 〗深夜チルで完全初見トルネコです .ᐟ.ᐟ🗡#トルネコの大冒険不思議のダンジョンちょっとステキなリマスター〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=42gfsaVXJ1I,ゲーム,トルネコの大冒険,,,,,,,,,\n天羽衣,2026/10/12,☾ ໋〖 絶体絶命 〗幸せの箱を消し飛ばし発狂する天羽衣 #vtuber #short #トルネコの大冒険 #トルネコの大冒険不思議のダンジョンちょっとステキなリマスター,https://www.youtube.com/watch?v=QXESP4_PQ3g, ,,,,,●,,,,,\n天羽衣,2026/10/13,☾ ໋ #11〖 トルネコの大冒険 〗深夜チルで完全初見トルネコです .ᐟ.ᐟ🗡#トルネコの大冒険不思議のダンジョンちょっとステキなリマスター〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=DyjOTDPcQQs,ゲーム,トルネコの大冒険,,,,,,,,,\n天羽衣,2026/10/13,☾ ໋〖 初見殺し 〗最悪な巻物を敵前で読んでしまう天羽衣 #vtuber #short #トルネコの大冒険 #トルネコの大冒険不思議のダンジョンちょっとステキなリマスター,https://www.youtube.com/watch?v=sdpT8CWKORU, ,,,,,●,,,,,\n天羽衣,2026/10/14,☾ ໋ 〖 10月メン限 〗マッシュルームワッパーを食べながら雑談です .ᐟ.ᐟ 🚌〖 天羽衣┊ななしいんく 〗,https://youtu.be/BTAXnudBJjQ,雑談,,,●,,,,,,,\n天羽衣,2026/10/14,☾ ໋〖 誰得❓ 〗天羽衣の「 ﾓﾓﾝｼﾞｬｯ!! 」 耐久　 #vtuber #short #トルネコの大冒険 #トルネコの大冒険不思議のダンジョンちょっとステキなリマスター,https://www.youtube.com/watch?v=ZTfZMZoUA64, ,,,,,●,,,,,\n天羽衣,2026/10/15,☾ ໋〖 !Drops✅ 〗ドクとソンブラと時々タンクです .ᐟ.ᐟ〖 天羽衣🤍ななしいんく 〗,,ゲーム,Overwatch,,,,,●,,,,\n天羽衣,2026/10/15,☾ ໋ #12〖 トルネコの大冒険 〗深夜チルで完全初見トルネコです .ᐟ.ᐟ🗡#トルネコの大冒険不思議のダンジョンちょっとステキなリマスター〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=1kl-6lmX3s0,ゲーム,トルネコの大冒険,,,,,,,,,\n天羽衣,2026/10/15,☾ ໋〖 絶望 〗最強の指輪3つを開始1分で全ロスし発狂する天羽衣　 #vtuber #short #トルネコの大冒険 #トルネコの大冒険不思議のダンジョンちょっとステキなリマスター,https://www.youtube.com/watch?v=fEr9dxuUsR4, ,,,,,●,,,,,\n天絆ささは,2026/10/01,【#朝活】おいでませ10月！おはようくーださい！木曜あさから元気になれる雑談☀️「おまもりラジオ」🎋【天絆ささは￤ななしいんく】,https://www.youtube.com/watch?v=prxvh9iShVM,雑談,おまもりラジオ,,,,,,,,,\n天絆ささは,2026/10/02,【オフコラボ】汚名返上せよ！お泊まりホラゲー開幕です🏠🎀味音痴vsビビりのForkRoad【re;BON 泉巫るはね￤ななしいんく 天絆ささは】,https://www.youtube.com/watch?v=mrKqCTIOAVY,コラボ、雑談,,泉巫るはね,,,,,,,,\n天絆ささは,2026/10/03,【ＧＣ実機🎮ドラクエモンスターズ】はじめてのDQM！世は育成時代だ～～！✨テリーのワンダーランドで大冒険🛡＃02【天絆ささは￤ななしいんく】#dq #新人VTuber,https://www.youtube.com/watch?v=-GCnNPY4-UU,ゲーム,ドラクエモンスターズ,,,,,,,,,\n天絆ささは,2026/10/05,【ＧＣ実機🎮ドラクエモンスターズ】はじめてのDQM！赤ちゃんモンスターが最強に！？✨テリーのワンダーランドで大冒険🛡＃03【天絆ささは￤ななしいんく】#dq #新人VTuber,https://www.youtube.com/watch?v=GasH7_yct20,ゲーム,ドラクエモンスターズ,,,,,,,,,\n天絆ささは,2026/10/08,【#朝活】おはようっていいたい！木曜あさから元気になれる雑談☀️「おまもりラジオ」🎋【天絆ささは￤ななしいんく】,https://www.youtube.com/watch?v=tFjl1lV5djs,雑談,おまもりラジオ,,,,,,,,,\n天絆ささは,2026/10/13,【だし巻き】そ う は な ら ん や ろ ！！！深夜のおしゃべりぺぁんだ食堂だよ🐣【天絆ささは￤ななしいんく】,https://www.youtube.com/watch?v=5q4EQLo0wqA,ゲーム,だし巻き,,,,,,,,,\n天絆ささは,2026/10/14,【SOUND VOLTEX EXCEED GEAR】おうちで筐体音ゲー！ボルテで遊ぼ🎶３Dライブ直前にリズム感を鍛えるのだ～～～！【天絆ささは￤ななしいんく】,https://www.youtube.com/watch?v=I25lC4gMwZs,ゲーム,SOUND VOLTEX EXCEED GEAR,,,,,,,,,\n天絆ささは,2026/10/14,枠盾なおしました🛡；；,https://www.youtube.com/watch?v=aq9VJZ0Yuco,ゲーム,SOUND VOLTEX EXCEED GEAR,,,,,,,,,\n天絆ささは,2026/10/14,【SOUND VOLTEX EXCEED GEAR】おうちで筐体音ゲー！ボルテで遊ぼ🎶３Dライブ直前にリズム感を鍛えるのだ～～～！【天絆ささは￤ななしいんく】,https://www.youtube.com/watch?v=wRimbDcnwH0,ゲーム,SOUND VOLTEX EXCEED GEAR,,,,,,,,,\n天絆ささは,2026/10/15,【#朝活】おはようっていいたい！木曜あさから元気になれる雑談☀️「おまもりラジオ」🎋【天絆ささは￤ななしいんく】,https://www.youtube.com/watch?v=pw2m0smI7iE,雑談,おまもりラジオ,,,,,,,,,\n島村シャルロット,2026/10/01,【Minecraft】ルルイエの成長ができるのか！？やっていきたいぞ！！　#マイクラ肝試し2026 　#シャルのひつじ【島村シャルロット / ななしいんく】,https://www.youtube.com/watch?v=JffOjOQkYB8,ゲーム,マインクラフト,,,,,,,,,\n島村シャルロット,2026/10/02,【Minecraft】ルルイエの自己更新目指すんだけど、1500の壁って行けるの？？　#マイクラ肝試し2026 　#シャルのひつじ【島村シャルロット / ななしいんく】,https://www.youtube.com/watch?v=x_AaxpOHd0Q,ゲーム,マインクラフト,,,,,,,,,\n島村シャルロット,2026/10/04,【Minecraft】最終日！後悔の無いように、下山します！！！！　#マイクラ肝試し2026 　#にこぷい【島村シャルロット / ななしいんく】,https://youtu.be/DcKR4KIHH4Q,コラボ、ゲーム,マインクラフト、マイクラ肝試し,堰代ミコ,,,,,,,,\n島村シャルロット,2026/10/04,【Minecraft】最終日！後悔の無いように、下山します！！！！　#マイクラ肝試し2026 　#にこぷい【島村シャルロット / ななしいんく】,https://www.youtube.com/watch?v=DcKR4KIHH4Q,ゲーム,マインクラフト,,,,,,,,,\n島村シャルロット,2026/10/05,【妹に運転を教える】車乗り回す末っ子悪魔が、さらに下の妹に運転を教えるだと！？　#シャルのひつじ【島村シャルロット / ななしいんく】,https://www.youtube.com/watch?v=IwHFKstp7hA,ゲーム,妹に運転を教える,,,,,,,,,\n島村シャルロット,2026/10/06,【Minecraft】ワールド統一化計画、一つを綺麗にしてから次に進もう！！　#567　#シャルのひつじ【島村シャルロット / ななしいんく】,https://www.youtube.com/watch?v=9IqtyZFRlec,ゲーム,マインクラフト,,,,,,,,,\n島村シャルロット,2026/10/08,【睡眠導入配信】第２６回　Sleep-sheep　#シャルのひつじ【島村シャルロット / ななしいんく】,https://www.youtube.com/watch?v=ob0sYxfhlCA,雑談、定期枠,Sleep-sheep,,,,,,,,,\n島村シャルロット,2026/10/09,【 ゼルダの伝説 ブレス オブ ザ ワイルド 】人生初ゼルダ✨　⑫ボスがいる城に突撃できるのか！？　#シャルのひつじ【島村シャルロット / ななしいんく】,https://www.youtube.com/watch?v=hYcW1I_6t-U,ゲーム,ゼルダの伝説,,,,,,,,,\n島村シャルロット,2026/10/10,【 Two Point Museum 】第二章「水族館」を経営してみよう！！　#シャルのひつじ【島村シャルロット / ななしいんく】,https://www.youtube.com/watch?v=zTXGZABZYZU,ゲーム,Two Point Museum,,,,,,,,,\n島村シャルロット,2026/10/11,【ELDENRING Shadow of the Erdtree】#5　すみません、時間がまた空いて怖さマシマシなのですが・・・　#シャルのひつじ【島村シャルロット / ななしいんく】,https://www.youtube.com/watch?v=OiTPcH6_gHI,ゲーム,ELDEN RING,,,,,,,,,\n島村シャルロット,2026/10/12,天使組でAPEXします！！,,ゲーム,Apex Legends,,,,,●,,,,\n島村シャルロット,2026/10/13,【Minecraft】ワールド統一化計画、植林場を綺麗なアパートにするぞ！！！　#568　#シャルのひつじ【島村シャルロット / ななしいんく】,https://www.youtube.com/watch?v=kFvDLIh_1f8,ゲーム,マインクラフト,,,,,,,,,\n島村シャルロット,2026/10/14,【Dressmaker/ドレスメーカー】センス無い悪魔がかっこいいドレス作ります！！！　#シャルのひつじ【島村シャルロット / ななしいんく】,https://www.youtube.com/watch?v=mSAZPUtR018,ゲーム,Dressmaker/,,,,,,,,,\n日向ましゅ,2026/10/04,【 雑談 】きゅるきゅるのウォンナ【 日向ましゅ / ななしいんく 】,https://www.youtube.com/watch?v=BbmNEK4ynGc,雑談,,,,,,,,,,\n日向ましゅ,2026/10/04,【 BOMBANANA! 】ういひかましゅで爆弾解除～！？💣️【 飛良ひかり / 天羽衣 / 日向ましゅ / ななしいんく 】,https://www.youtube.com/watch?v=dfs-UCw6nLI,ゲーム、コラボ,BOMBANANA,飛良ひかり、天羽衣,,,,,,,,\n日向ましゅ,2026/10/09,足音ドカドカソンブラ,,ゲーム,Overwatch,,,,,●,,,,\n日向ましゅ,2026/10/11,【 雑談 】あれれ【 日向ましゅ / ななしいんく 】,https://www.youtube.com/watch?v=0k7aIHUrr8E,雑談,,,,,,,,,,\n日向ましゅ,2026/10/14,【 飲酒雑談 】ひさびさにおさけのみましょう【 日向ましゅ / ななしいんく 】,https://www.youtube.com/watch?v=vFnYZ17_de0,雑談,飲酒,,,,,,,,,\n日向ましゅ,2026/10/15,【 妹に運転を教える 】世界一やさしい姉です。私は長女です。【 日向ましゅ / ななしいんく 】,https://www.youtube.com/watch?v=kuDauyezw8w,ゲーム,妹に運転を教える,,,,,,,,,\n飛良ひかり,2026/10/01,天下無双ARK┊︎#5 試練の洞窟から配信してます,,ゲーム、スト鯖,天下無双ARK、ARK,,,,,●,,,,\n飛良ひかり,2026/10/01,バディの意味を知った次の日 #SURGETown #gta #shorts #vtuber #ゲーム実況,https://www.youtube.com/watch?v=GmWIGKdpLro, ,,,,,●,,,,,\n飛良ひかり,2026/10/02,WARDOGS┊︎ミドリさんに教えてもらう！,,ゲーム、コラボ,WARDOGS,ミドリ,,,,●,,,,\n飛良ひかり,2026/10/02,ちいかわMBTI診断をみんなにやらせるじーにあす #雀魂 #shorts #vtuber #ゲーム実況,https://www.youtube.com/watch?v=orDOf3F3P7g,ゲーム,,,,,●,,,,,\n飛良ひかり,2026/10/03,天下無双ARK┊︎#6 最終日！恐竜さんとばいばいする;-;,,ゲーム、スト鯖,天下無双ARK、ARK,,,,,●,,,,\n飛良ひかり,2026/10/03,【あさひか！】最近あったことを話そうか？【飛良ひかり / ななしいんく】,https://www.youtube.com/watch?v=aIwlibjM6OM,雑談,あさひか！,,,,,,,,,\n飛良ひかり,2026/10/03,後ずさる師匠に前ステしまくるじーにあす #雀魂 #shorts #vtuber #ゲーム実況,https://www.youtube.com/watch?v=u7LLqdaVt_g,ゲーム,,,,,●,,,,,\n飛良ひかり,2026/10/04,雑学の片手間にロンされて叫ぶじーにあすｗｗ #雀魂 #shorts #vtuber #ゲーム実況,https://www.youtube.com/watch?v=K4kupZCxYrQ, ,,,,,●,,,,,\n飛良ひかり,2026/10/04,【BOMBANANA!】🙈！🙉！🙊！爆弾解除するウキッ！【飛良ひかり / ななしいんく】,https://www.youtube.com/watch?v=tk3a0_UsvHE,ゲーム、コラボ,BOMBANANA,天羽衣、日向ましゅ,,,,,,,,\n飛良ひかり,2026/10/07,ぶいすぽGG┊︎こっそり参加します..,,イベント,PUBG,,,,,●,,,,\n飛良ひかり,2026/10/09,キレるまでが早すぎるじーにあすｗ #shorts #vtuber #ゲーム実況 #闘魂,https://www.youtube.com/watch?v=UjVkF7BHDwQ, ,,,,,●,,,,,\n飛良ひかり,2026/10/09,【妹に運転を教える】ひかちゃん先生が教えちゃるけんのぉ！！！【飛良ひかり / ななしいんく】,https://www.youtube.com/watch?v=66My4ypBtcc,ゲーム,妹に運転を教える,,,,,,,,,\n飛良ひかり,2026/10/10,【あさひか！】活動6周年の朝【飛良ひかり / ななしいんく】,https://www.youtube.com/watch?v=TibF-cNnrqY,雑談,あさひか！,,,,,,,,,\n飛良ひかり,2026/10/10,変な鳴き声で戦い続ける師弟ｗｗ #shorts #vtuber #ゲーム実況 #闘魂,https://www.youtube.com/watch?v=74l-XkKVtoc, ,,,,,●,,,,,\n飛良ひかり,2026/10/10,【#ひかるい6周年】マネちゃん選出！Xポストクイズ！【瀬島るい / 飛良ひかり / ななしいんく】,https://www.youtube.com/watch?v=qhTOacSf33c,コラボ、企画,,瀬島るい,,,,,,,,\n飛良ひかり,2026/10/10,【ひかるいロケ】ひかるい6周年企画！格付けチェック！？ 【瀬島るい / 飛良ひかり / ななしいんく】,https://www.youtube.com/watch?v=EIRZKMqV1qw, ,,瀬島るい,,●,,,,,,\n飛良ひかり,2026/10/15,【#ひかるいティータイム】お昼のゆるっと雑談【瀬島るい / 飛良ひかり / ななしいんく】,https://www.youtube.com/watch?v=XGQPIXzReWI,雑談、コラボ,,瀬島るい,,,,,,,,\n風見くく,2026/10/01,【 #妹に運転を教える 】俺にはまず妹がいないからそこから問い詰めていい？【風見くく / ななしいんく】,https://www.youtube.com/watch?v=uRL3sk1HWQ0,ゲーム,妹に運転を教える,,,,,,,,,\n風見くく,2026/10/04,【 #Phasmophobia  】なんかマップ増えてたけど出来てなかったので昼ﾍｧｽﾞﾓ【風見くく / ななしいんく】,https://www.youtube.com/watch?v=bXqYhRX154A,ゲーム,Phasmophobia,,,,,,,,,\n風見くく,2026/10/05,【 #ストグラseason2  】1本の電話から始まった、1ヶ月釣りばかりの日々が変わった日 #2【たけいしょうじ/ジャックス/ボイラ/山田パルコ/春原新(ダブチ)】#ストグラ #ストグラ切り抜き,https://www.youtube.com/watch?v=k13qJ_QPqmQ,ゲーム、スト鯖,GTAV、ストグラ,,,,,,,,,\n風見くく,2026/10/07,【 #妹に運転を教える 】無敵の企業勢Vtuber、妹に運転ではなく淫夢を教えた結果野獣先輩になってしまった【風見くく / ななしいんく】 #ゲーム実況 #vtuber #野獣先輩,https://www.youtube.com/watch?v=grYAKuz7O80,ゲーム,妹に運転を教える,,,,,,,,,\n風見くく,2026/10/12,【 #えるすりー12 】ライブで1人で7人のセリフを真似したら限界が来た【風見くく / ななしいんく】#うたプリ #歌ってみた #HE★VENS #全部俺,https://www.youtube.com/watch?v=wHpb4lwZ7G0,,,,,,●,,,,,\n幽音しの,2026/10/01,【#雑談】朝活４日目！！今日も朝からしのと話そ！【幽音しの / ななしいんく】#shorts,https://www.youtube.com/watch?v=SAX-wMgPDik,雑談,,,,,,,,,,\n幽音しの,2026/10/01,【 安価マック 】※今年食べるマックはここで決まります。【幽音しの:ななしいんく】#shorts,https://www.youtube.com/watch?v=P2x9xSejoe8,企画,,,,,,,,,,\n幽音しの,2026/10/02,【#雑談】朝活５日目！！今日の朝ご飯はないしょ！【幽音しの / ななしいんく】#shorts,https://www.youtube.com/watch?v=qD0cm98arbA,雑談,,,,,,,,,,\n幽音しの,2026/10/02,【Getting Over It】クリアするまでダッツ禁止！誕生日&amp;Lingerグッズ記念耐久！！！！【幽音しの:ななしいんく】　#新人vtuber,https://www.youtube.com/watch?v=MnuwH2xFw7I,ゲーム,Getting Over It,,,,,,,,,\n幽音しの,2026/10/03,【#雑談】朝活6日目！！土曜日も朝からお話しよ！！【幽音しの / ななしいんく】#shorts,https://www.youtube.com/watch?v=1JP-UR_4vl4,雑談,,,,,,,,,,\n幽音しの,2026/10/03,【3D弾き語り】 おめでたいので！！さよならメモリーズ/supercell #shorts  #弾き語り,https://www.youtube.com/watch?v=iFtZeSdRabk, ,,,,,●,,,,,\n幽音しの,2026/10/04,【#雑談】朝活7日目！！ついに１週間朝活完走だ！！！！！！！！！！！！！！！【幽音しの / ななしいんく】#shorts,https://www.youtube.com/watch?v=nhIgPhne7SE,雑談,,,,,,,,,,\n幽音しの,2026/10/04,【 朝活完走記念】しのの７日間を称えてダッツを食べまくる！！！！！！！【幽音しの:ななしいんく】  #vtuber　#雑談,https://www.youtube.com/watch?v=7CT2gvny84E,雑談,,,,,,,,,,\n幽音しの,2026/10/05,【 Apex】にこつんとやっていく！！ぱらだいす！【幽音しの:ななしいんく】,https://www.youtube.com/watch?v=2AYKC_0dxCw,コラボ、ゲーム,Apex Legends,ニコラ･クラエス,,,,,,,,\n幽音しの,2026/10/06,【#apexlegends 】少しだけ練習しようかなと思う所存！！【幽音しの:ななしいんく】,https://www.youtube.com/watch?v=C6Z3ldC8u7E,ゲーム,Apex Legends,,,,,,,,,\n幽音しの,2026/10/07,【#雑談】水曜日のお雑談！キャンプが楽しそうな時期になりましたね！【幽音しの:ななしいんく】　#shorts  #vsinger,https://www.youtube.com/watch?v=O_In6uLp3Xc,雑談,,,,,,,,,,\n幽音しの,2026/10/08,【 深夜定期】 #弾き語り　秋の夜長にギターを【幽音しの:ななしいんく】　#shorts  #vsinger #歌枠 　 singing stream,https://www.youtube.com/watch?v=g00-7BwFd48,歌枠,,,,,,,,,,\n幽音しの,2026/10/09,【#雑談】朝活スタート？しののお上品朝ご飯【幽音しの / ななしいんく】#shorts,https://www.youtube.com/watch?v=8wBaEyxiABk,雑談,,,,,,,,,,\n幽音しの,2026/10/10,【 歌枠】イケボにかっこよく歌います【幽音しの:ななしいんく】　#shorts  #vsinger #歌枠 　 singing stream,https://www.youtube.com/watch?v=p3HP-XEVMl4,歌枠,,,,,,,,,,\n幽音しの,2026/10/11,\"「Linger」 MUSIC:*Luna,幽音しの　サブスクリリース、フルMV公開中！#shorts  #vtuber #オリジナル曲\",https://www.youtube.com/watch?v=rzX6XfdSAYY, ,,,,,●,,,,,\n幽音しの,2026/10/11,【 高評価１０００目指すよ！】 #弾き語り【幽音しの:ななしいんく】　#shorts  #vsinger #歌枠 　 singing stream,https://www.youtube.com/watch?v=9dOSDLhDtro,歌枠、企画,,,,,,,,,,\n幽音しの,2026/10/11,【弾き語り1発取り】 LOVE&amp;ROLL / supercell  #shorts  #vtuber,https://www.youtube.com/watch?v=BahtKt-u5BE,歌枠,,,,,,,,,,\n幽音しの,2026/10/11,【弾き語り1発撮り】　路上ライブ風　ninelie / Aimerwith Chelly #shorts  #vtuber,https://www.youtube.com/watch?v=ZyDNAO1NihA,歌枠,,,,,,,,,,\n幽音しの,2026/10/12,【3D路上ライブ】　Departures ~あなたにおくるアイの歌　/EGOIST #shorts  #vtuber,https://www.youtube.com/watch?v=QNcSL0flcjg, ,,,,,●,,,,,\n幽音しの,2026/10/13,【3Dで路上弾き語り】 うたかた花火/supercell #shorts  #vtuber #supercell,https://www.youtube.com/watch?v=4jSbzRlAZT8, ,,,,,●,,,,,\n幽音しの,2026/10/14,【3Dで弾き語りしてみた！ 】星が瞬くこんな夜に　#shorts   #vsinger,https://www.youtube.com/watch?v=1us6UTfki0k,ゲーム,星のカービィスーパーデラックス,,,,,,,,,\n柚原いづみ,2026/10/01,【#ストグラ】#ストグラSeason2 柚乃いずみの日常～159日目～【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=hp15a98MJf8,ゲーム、スト鯖,GTAV、ストグラ,,,,,,,,,\n柚原いづみ,2026/10/02,【#ストグラ】#ストグラSeason2 柚乃いずみの日常～160日目～【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=rbveYME-MWE,ゲーム、スト鯖,GTAV、ストグラ,,,,,,,,,\n柚原いづみ,2026/10/03,【#ストグラ切り抜き】名前を覚えられないウェスカーと条件を覚えられない柚乃いずみ【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=LKVLk6vwDHo,ゲーム、スト鯖,GTAV、ストグラ,,,,,,,,,\n柚原いづみ,2026/10/03,【ARK: Survival Evolved】#天下無双ARK 最終日！【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=2BjIRf_Zd3Q,ゲーム、スト鯖,ARK、天下無双ARK,,,,,,,,,\n柚原いづみ,2026/10/03,【#ストグラ】#ストグラSeason2 柚乃いずみの日常～161日目～【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=-SVXIZBLuIo,ゲーム、スト鯖,GTAV、ストグラ,,,,,,,,,\n柚原いづみ,2026/10/04,【#ストグラ】#ストグラSeason2 柚乃いずみの日常～162日目～【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=qjX2C16SJWo,ゲーム、スト鯖,GTAV、ストグラ,,,,,,,,,\n柚原いづみ,2026/10/05,【雀魂】指示厨が泡吹いて倒れない麻雀【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=o2C8mGt6lp4,ゲーム,麻雀、雀魂,,,,,,,,,\n柚原いづみ,2026/10/06,『ストグラミステリーコラボ告知配信』,https://youtu.be/CRGh2i1pglE,雑談、コラボ、スト鯖,,,,,,,,,,\n柚原いづみ,2026/10/07,【ストリートファイター6】ダイヤ1～ M不知火舞でランクマ挑戦！【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=uf1xpGlpA2Y,ゲーム,STREET FIGHTER,,,,,,,,,\n柚原いづみ,2026/10/07,【#ストグラ】#ストグラSeason2 柚乃いずみの日常～163日目～【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=EVFcCuSaDVg,ゲーム、スト鯖,GTAV、ストグラ,,,,,,,,,\n柚原いづみ,2026/10/08,【#ストグラ】#ストグラSeason2 柚乃いずみの日常～164日目～【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=FwLHOHFeNVE,ゲーム、スト鯖,GTAV、ストグラ,,,,,,,,,\n柚原いづみ,2026/10/09,【雀魂】指示厨が泡吹いて倒れない麻雀【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=woxnKqEcXHk, ,,,,,●,,,,,\n柚原いづみ,2026/10/09,【#ストグラ】#ストグラSeason2 柚乃いずみの日常～165日目～【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=Crl5Jz6flN4,ゲーム、スト鯖,GTAV、ストグラ,,,,,,,,,\n柚原いづみ,2026/10/10,【ストリートファイター6】ダイヤ1～ M不知火舞でランクマ挑戦！【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=NmYFWRgbTV0, ,,,,,●,,,,,\n柚原いづみ,2026/10/10,【#ストグラ】#ストグラSeason2 柚乃いずみの日常～166日目～【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=teXDGvNMZRM,ゲーム、スト鯖,GTAV、ストグラ,,,,,,,,,\n柚原いづみ,2026/10/11,【#ストグラ】#ストグラSeason2 柚乃いずみの日常～167日目～【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=BFipGPBBdmo,ゲーム、スト鯖,GTAV、ストグラ,,,,,,,,,\n柚原いづみ,2026/10/12,【GTA5】#SURGECity ～新人メカニック奮闘記～【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=9R7E6ef6gx0,ゲーム、スト鯖,GTAV、SURGECity,,,,,,,,,\n柚原いづみ,2026/10/13,探索型ミステリーイベント 「5000番地にて」って結局何？SPトーク！,https://youtu.be/kJkipI3ftXg,雑談、コラボ,,,,,,,,,,\n柚原いづみ,2026/10/13,【雀魂】指示厨が泡吹いて倒れない麻雀【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=B_DYZHV9pY8, ,,,,,●,,,,,\n柚原いづみ,2026/10/14,【ストリートファイター6】ダイヤ1～ M不知火舞でランクマ挑戦！【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=jSVtkd1ewyU, ,,,,,●,,,,,\n柚原いづみ,2026/10/14,【#ストグラ】#ストグラSeason2 柚乃いずみの日常～168日目～【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=yQue7MTZyfM,ゲーム、スト鯖,GTAV、ストグラ,,,,,,,,,\n柚原いづみ,2026/10/15,【試聴動画】⚠️柚原いづみ束縛ボイス🚫【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=Bik2WeGRXnI, ,,,,●,,,,,,\n柚原いづみ,2026/10/15,【雀魂】指示厨が泡吹いて倒れない麻雀【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=9WG4wnitC1Q,ゲーム,麻雀、雀魂,,,,,,,,,\n柚原いづみ,2026/10/15,【#ストグラ】#ストグラSeason2 柚乃いずみの日常～169日目～【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=CLaqyxx1bJ0,ゲーム、スト鯖,GTAV、ストグラ,,,,,,,,,\n龍ヶ崎リン,2026/10/01,お前らの愛しのハニーが日本に帰ってきました【龍ヶ崎リン / ななしいんく】,https://www.youtube.com/watch?v=GO00oLr4KnU,雑談,,,,,,,,,,\n龍ヶ崎リン,2026/10/02,歌をうたってみようと思う【龍ヶ崎リン / ななしいんく】,https://www.youtube.com/watch?v=9rSeLYpkKh0,歌枠,,,,,,,,,,\n龍ヶ崎リン,2026/10/03,どう見たって優しいお姉ちゃんが妹に運転を教える【龍ヶ崎リン / ななしいんく】,https://www.youtube.com/watch?v=OT7AFwSB98U,ゲーム,妹に運転を教える,,,,●,,,,,\n龍ヶ崎リン,2026/10/04,🎖️メンバー限定 | 龍ヶ崎リンと観る、劇場版「ファイナルファンタジーVII アドベントチルドレン」,https://www.youtube.com/watch?v=l1awBqbGx7I,同時視聴,,,●,,,,,,,\n龍ヶ崎リン,2026/10/06,【ゼンゼロ】PV同時視聴&amp;Ver.3.1シーズン3第3章「秘密と、過去と、彼女たちと」初見実況プレイ【龍ヶ崎リン / ななしいんく】,https://www.youtube.com/watch?v=ynZtxL5MxTs,ゲーム、同時視聴,ゼンレスゾーンゼロ,,,,,,,,,\n龍ヶ崎リン,2026/10/12,【重大告知】橘リルリ転生いたします！【龍ヶ崎リン / ななしいんく】,https://www.youtube.com/watch?v=cqoZJjpSX3c,ゲーム,【重大告知】橘リルリ転生いたします！,,,,,,,,,\n龍ヶ崎リン,2026/10/14,龍ヶ崎リンの浮気判定ラインガチ回答,https://www.youtube.com/watch?v=iAIba_kdi1Y,雑談,浮気判定シート,,,,,,,,,\n緑青くれは,2026/10/01,お前もうハンドル握るな #vtuber #新人vtuber #切り抜き #ゲーム実況 #妹に運転を教える #steam #バカゲー #shorts #ななしいんく,https://www.youtube.com/watch?v=sE0ujjgF_SM,,,,,,●,,,,,\n緑青くれは,2026/10/01,【妹に運転を教える】大流行しているAI妹に運転を教えるゲームで大発狂する緑青くれは【緑青くれは / ななしいんく】,https://www.youtube.com/watch?v=yDk2vKoozOo,ゲーム,妹に運転を教える,,,●,,,,,,\n緑青くれは,2026/10/02,#7【スーパーマリオサンシャイン】目指せ全回収❕ついに残り10枚のシャインを全部集めるぞッ🌴🌞【#新人Vtuber/緑青くれは】,https://www.youtube.com/watch?v=fhbZeIAF_P4,ゲーム,スーパーマリオサンシャイン,,,,,,,,,\n緑青くれは,2026/10/03,空耳マリオサンシャイン #vtuber #新人vtuber #切り抜き #ゲーム実況 #マリオ #スーパーマリオ #スーパーマリオサンシャイン #nintendo #任天堂 #shorts,https://www.youtube.com/watch?v=L7DKusCRf-c,,,,,,●,,,,,\n緑青くれは,2026/10/03,【 麻雀 / 雀魂 】雀魂杯で戦った4人で打つぞッ❕絶対に放銃しないからなああッ🀄🌟【緑青くれは・米将軍・歌衣メイカ・湖南みあ / ななしいんく 】,https://www.youtube.com/watch?v=wGW7u7bGMiM,ゲーム,麻雀、雀魂,米将軍、歌衣メイカ、湖南みあ ,,,,,,,,\n緑青くれは,2026/10/06,全く怖くないホラゲー #vtuber #新人vtuber #切り抜き #ゲーム実況 #ホラー #ホラーゲーム #ホラゲー #雪葬 #チラズアート #steam #shorts,https://www.youtube.com/watch?v=1iNgjWS5xcQ,,,,,,●,,,,,\n緑青くれは,2026/10/07,#1【星のカービィスーパーデラックス】完全初見❕ずっとやりたかった神ゲーついにきたああああッ🍅🌟【#新人Vtuber/緑青くれは】,https://www.youtube.com/watch?v=XAszDcXEqjM,ゲーム,星のカービィスーパーデラックス,,,,,,,,,\n緑青くれは,2026/10/07,#1【星のカービィスーパーデラックス】完全初見❕ずっとやりたかった神ゲーついにきたああああッ🍅🌟【#新人Vtuber/緑青くれは】,https://www.youtube.com/watch?v=HBKjliWoE40,ゲーム,星のカービィスーパーデラックス,,,,,,,,,\n緑青くれは,2026/10/09,伝説のグルメレース #vtuber #新人vtuber #切り抜き #ゲーム実況 #nintendo #カービィ #星のカービィ #星のカービィスーパーデラックス #kirby #shorts,https://www.youtube.com/watch?v=2AhZz4QfZUE,,,,,,●,,,,,\n緑青くれは,2026/10/09,【 ホラゲー/ 白栄大学0号館 】最恐の謎❕❔心霊サークルで立入り禁止の廃校舎へ突撃だッ🏫👻【緑青くれは / ななしいんく】,https://www.youtube.com/watch?v=cprs0nDe9bg,ゲーム,白栄大学0号館,,,,,,,,,\n緑青くれは,2026/10/10,#2【星のカービィスーパーデラックス】完全初見❕大洞窟ですべてのお宝をコンプするぞッッ🍅🌟【緑青くれは / ななしいんく】,https://www.youtube.com/watch?v=DJ0ZBq_dOmU,ゲーム,星のカービィスーパーデラックス,,,,,,,,,\n緑青くれは,2026/10/11,カービィの罠 #vtuber #新人vtuber #ゲーム実況 #切り抜き #カービィ #星のカービィ #星のカービィスーパーデラックス #kirby #nintendo #shorts,https://www.youtube.com/watch?v=8Z2vHeevXzo,,,,,,●,,,,,\n緑青くれは,2026/10/11,【 都市伝説解体センター 】怪異と対峙❕都市伝説を紐解くお仕事に就職しましたぞッ👻📚【緑青くれは / ななしいんく】,https://www.youtube.com/watch?v=YnIX4LLd1A0,ゲーム,都市伝説解体センター,,,,,,,,,\n緑青くれは,2026/10/13,真のフレネミー #vtuber #新人vtuber #切り抜き #ゲーム実況 #カービィ #星のカービィ #星のカービィスーパーデラックス #kirby #nintendo #shorts,https://www.youtube.com/watch?v=k2MAkH4tR1E,,,,,,●,,,,,\n緑青くれは,2026/10/14,#3【星のカービィスーパーデラックス】完全初見❕メタナイトの逆襲で完全無双するぞおおッ🍅🌟【緑青くれは / ななしいんく】,https://www.youtube.com/watch?v=2xGO-9yrK5E,ゲーム,星のカービィスーパーデラックス,,,,,,,,,\n緑青くれは,2026/10/15,なんなんだこの世界 #vtuber #新人vtuber #切り抜き #ゲーム実況 #カービィ #星のカービィ #星のカービィスーパーデラックス #kirby #nintendo #shorts,https://www.youtube.com/watch?v=Fm-MqXiIHJw,,,,,,●,,,,,\nアズリ,2026/09/30,「ウェスカー どこに行った？」「 君のような勘のいいガキは嫌いだよ」 - biohazard HD REMASTER【ななしいんく/アズリ】,https://www.youtube.com/watch?v=69x80MPvmFQ,ゲーム,,,,,,,,,,\nここ・じぇす汰,2026/09/30,【JSP3】超ビビリ2人、テンパりすぎて仕事にならない。【 天絆ささは / ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=Ev9PHH4FU7s,コラボ、ゲーム,日本事故物件監視協会3,天絆ささは,,,,,,,,\n龍ヶ崎リン,2026/09/30,GUM&amp;DROPを踊らされる龍ヶ崎リン,https://www.youtube.com/watch?v=bMVkuufbQMY,,,,,,●,,,,,\nななしいんく公式,2026/09/29,#19【#ななしおーるいん】『おーるいん！REACTION LIAR GAME』（同時配信枠）,https://www.youtube.com/watch?v=2Xwt_11tFfg,企画、コラボ,ななしおーるいん,宗谷いちか、堰代ミコ、龍ヶ崎リン、飛良ひかり、茜音カンナ、天羽衣、汐鳴みりね,,,,,,,,\nぴかまるNS-PT01,2026/09/30,【LIMINAL GAME】優しいリミナル散歩【ぴかまる NS-PT01/ななしいんく】,https://www.youtube.com/watch?v=xze3j6G5V2c,ゲーム,LIMINAL GAME,,,,,,,,,\n瀬島るい,2026/09/30,ミリしらはたらく細胞白血球ちゃん？で導く天羽衣 #瀬島るい #shorts,https://www.youtube.com/watch?v=48ZTqWZpluU,,,,,,●,,,,,\n飛良ひかり,2026/09/30,頑張ってみんなに挨拶をするじーにあすｗ #SURGETown #gta #shorts #vtuber #ゲーム実況,https://www.youtube.com/watch?v=wk5budZ0syk,,,,,,●,,,,,\n蛇宵ティア,2026/09/30,【 #踊ってみた 】今世紀最大のキミは都市伝説!? キミは都市伝説 / BUDDiiS【 蛇宵ティア / ななしいんく 】#shorts #buddiies #キミは都市伝説,https://www.youtube.com/watch?v=h1rNYRcxXZ4,,,,,,●,,,,,\nななしいんく公式,2026/09/30,【#ななしスイカ大会】大先輩に泣かされる新人ここ・じぇす汰【宗谷いちか/島村シャルロット/堰代ミコ/季咲あんこ/風見くく/ここ・じぇす汰】#ななしいんく #shorts,https://www.youtube.com/watch?v=IefN8SGyglc,,,,,,●,,,,,\n堰代ミコ,2026/09/30,【 🔱メンバー限定🔱 】劇場版「チェンソーマン」-レゼ篇-同時視聴🎥【 堰代ミコ / ななしいんく 】,https://youtu.be/b8Sc9RnLkfk,同時視聴,,,●,,,,,,,\nぴかまるNS-PT01,2026/09/29,【ダンボール戦機】#13 クエストBBS（趣味） 【ぴかまる NS-PT01/ななしいんく】,https://www.youtube.com/watch?v=-fL0lhwv3cI,ゲーム,ダンボール戦機,,,,,,,,,\n茜音カンナ,2026/09/30,【 朝ラジ 】わんもに！～第157回～【茜音カンナ / ななしいんく】,https://www.youtube.com/watch?v=z4zq_quntJw,雑談、定期枠,わんもに！,,,,,,,,,\n茜音カンナ,2026/09/29,【 Paradise Lost / 茅原実里 】「喰霊-零-」OP歌った！ #shorts #animesong 【茜音カンナ / ななしいんく】,https://www.youtube.com/watch?v=SHTOdEEKzS8,,,,,,●,,,,,\n柚原いづみ,2026/09/30,【メン限】ないしょのメンバーシップ限定配信♡【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=0otLYN-Bhjw,雑談,,,●,,,,,,,\n杏戸ゆげ,2026/09/30,なな酒いんくでBREATHERさんに無茶ぶりにいってみた【杏戸ゆげ/湖南みあ/日向ましゅ/ななしいんく】,https://www.youtube.com/watch?v=358NR_ZZ7UQ,,,湖南みあ、日向ましゅ,,●,,,,,,\n杏戸ゆげ,2026/09/29,【ARK Survival Ascended/天下無双ARK＃5】洞窟探検にいきたい🦕【杏戸ゆげ/ななしいんく】,https://www.youtube.com/watch?v=eyLWfSrpYyM,ゲーム、スト鯖,ARK、天下無双ARK,,,,,,,,,\n風見くく,2026/09/30,【月末メン限】流石にそろそろ衣替えの時期ですよ…暑い、暑くない？【風見くく / ななしいんく】,https://www.youtube.com/watch?v=kh02KPx47tA,雑談,,,●,,,,,,,\n因幡はねる,2026/09/29,【METAL GEAR SOLID 2】へぇ・・・あんたもエイムズっていうんだ【因幡はねる / ななしいんく】,https://www.youtube.com/watch?v=cv-EQd5CTJ0,ゲーム,METAL GEAR SOLID,,,,,,,,,\n堰代ミコ,2026/09/29,【 #マイクラ肝試し2026 】生活ッ！生活ッ！げぇむ！げぇむ！👻【 堰代ミコ / ななしいんく 】,https://www.youtube.com/watch?v=-FiiG_C9un0,ゲーム,マインクラフト、マイクラ肝試し,,,,,,,,,\n家入ポポ,2026/09/30,『MARVEL Tōkon: Fighting Souls』ロケットが好きポポです w/飛良ひかり3・SHAKA3・鈴木ノリアキ3・豆スパイダー3・ふぇりっち3【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=H1aEhBS71JU,コラボ、ゲーム,MARVEL Tōkon,飛良ひかり、SHAKA、鈴木ノリアキ、豆スパイダー、ふぇりっち,,,,,,,,\n家入ポポ,2026/09/29,【#天下無双ARK / 7日目】うみのいきものと、おともだち【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=ccy4r1m5g00,ゲーム、スト鯖,ARK、天下無双ARK,,,,,,,,,\n季咲あんこ,2026/09/29,【 Stardew Valley 】5年目なつ20かめ～！今日はジオードあつめだ✧！【 季咲あんこ / ななしいんく 】,https://www.youtube.com/watch?v=Da6NvUnptbY,コラボ、ゲーム,Stardew Valley ,白百合リリィ,,,,,,,,\n島村シャルロット,2026/09/30,【メンバー限定配信】みんなと楽しく歌いたい！！！　#シャルのひつじ【島村シャルロット / ななしいんく】【島村シャルロット / ななしいんく】,https://youtu.be/bMZyB4aq3dU,歌枠,,,●,,,,,,,\n月野木ちろる,2026/09/29,【ASMR┆睡眠導入】純愛セラピー🌿お布団とんとん&amp;よしよし寝かしつけ添い寝ASMR　耳ふぅ┆囁き┆吐息┆Binaural┆Ear Blowing for Sleep　【月野木ちろる/ななしいんく】,https://www.youtube.com/watch?v=ktRAzpHSKqU,ASMR,,,,,,,,,,\n汐鳴みりね,2026/09/30,【ゼルダの伝説 ブレワイ】完全初見🔰ウツシエを全部見つけに行きます。残り６個# 16【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=GI0I42dJS_8,ゲーム,,,,,,,,,,\n飛良ひかり,2026/09/28,天下無双ARK┊︎#3 デイノスクスほしい,,ゲーム、スト鯖,ARK、天下無双ARK,,,,,●,,,,\n天絆ささは,2026/09/28,【メンバーシップ限定】あれかくよ！！！🍁🐼🍁近況もきいてほしいの巻【天絆ささは￤ななしいんく】,https://youtu.be/09RZKWRCNfg,雑談,,,●,,,,,,,\n漆瀬レイ,2026/09/30,【ブチギレ】妹に運転を教えた結果…【妹に運転を教える】 #shorts #vtuber #新人VTuber #ななしいんく,https://www.youtube.com/watch?v=jhSqgbFJa_w,,,,,,●,,,,,\n蛇宵ティア,2026/09/30,【 #蛇宵誕生日 】お誕生日カウントダウン🍰とうとうアレが…!?大量の告知を見逃すな！【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=0QKEwehe_Vc,記念配信,,,,,,,,,,\n蛇宵ティア,2026/09/29,【 #踊ってみた 】色っぽ宵さんはいかが？ SWEAT / KISS OF LIFE【 蛇宵ティア / ななしいんく 】#shorts #sweat #kpop,https://www.youtube.com/watch?v=riEd_JCSKbc,,,,,,●,,,,,\nななしいんく公式,2026/09/29,【#ななし雀魂杯】一人で10万点以上稼ぐしょぼすけさん【柚原いづみ/しょぼすけ/けんき】#ななしいんく #shorts,https://www.youtube.com/watch?v=CMYsnGoZXUU,,,,,,●,,,,,\n蛇宵ティア,2026/09/29,【 Fallout 3 #2 】お父さんを探して【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=LJapljCK3y0,ゲーム,Fallout,,,,,,,,,\n瀬島るい,2026/09/30,【 雑談 】ちいかわデート行ってきたんだよォー！　【 瀬島るい┋ななしいんく 】,https://www.youtube.com/watch?v=PVsjDE_5RMU,雑談,,,,,,,,,,\n漆瀬レイ,2026/09/29,ナ。斜め上すぎる言い訳について【妹に運転を教える】 #shorts #vtuber #新人VTuber #ななしいんく,https://www.youtube.com/watch?v=hlqiu9D1iZY,,,,,,●,,,,,\n西園寺メアリ,2026/09/30,【雑談】ねぇ、声聞くの久しぶりでしょう？♡【西園寺メアリ / ななしいんく】,https://www.youtube.com/watch?v=bPfC1UmmDns,雑談,,,,,,,,,,\n天羽衣,2026/09/30,☾ ໋ #2〖 トルネコの大冒険 〗深夜チルで完全初見トルネコです .ᐟ.ᐟ🗡#トルネコの大冒険不思議のダンジョンちょっとステキなリマスター〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=V4gKILSLiCs,ゲーム,トルネコの大冒険,,,,,,,,,\n幽音しの,2026/09/29,幽音しの/*Luna『 Linger 』  リリースしました！　10/04まで誕生日&amp;リリースグッズ販売中！,https://www.youtube.com/watch?v=BcYvEoPssLw,,,,,,●,,,,,\n天羽衣,2026/09/29,☾ ໋〖 グッズ最終日 〗ブルブルマシンの上でも誕生日ケーキを落とすわけにはいかないんです .ᐟ.ᐟ 🎂 #Don'tDropTheCake〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=VHrVst7OstE,ゲーム,Don'tDropTheCake,,,,,,,,,\n風見くく,2026/09/29,【 #SURGETOWN 】1億2千万を賭けてチンチロをするために警察に賄賂渡して銀行強盗しに行った回【花前ハル/らぎ太(Ragis)/かずむら(TIE_K4zu-mura)/風見くく】,https://www.youtube.com/watch?v=zbjOfOz-2X4,,,,,,,,,,,\n島村シャルロット,2026/09/29,【Minecraft】ルルイエのランキングを上げたいので、回数こなすのみだよね！！！！　#マイクラ肝試し2026 　#シャルのひつじ【島村シャルロット / ななしいんく】,https://www.youtube.com/watch?v=g8HpAsrGobE,ゲーム,マインクラフト,,,,,,,,,\n飛良ひかり,2026/09/30,【MARVEL Tōkon: Fighting Souls】コーチに教わってチーム対抗戦するよ！【飛良ひかり / ななしいんく】,https://www.youtube.com/watch?v=zAq9E7uxytw,コラボ、ゲーム,MARVEL Tōkon,家入ポポ、SHAKA、鈴木ノリアキ、豆スパイダー、ふぇりっち,,,,,,,,\n飛良ひかり,2026/09/29,無線の返事が返ってきて嬉しがるじーにあす #SURGETown #gta #shorts #vtuber #ゲーム実況,https://www.youtube.com/watch?v=IXAGRrmf2q0,,,,,,●,,,,,\n杏戸ゆげ,2026/09/29,からんころん,,雑談,,,,,,●,,,,\n飛良ひかり,2026/09/29,【ストリートファイター6】1年ぶりにプレイしてもうまいマリーザ配信【飛良ひかり / ななしいんく】,https://www.youtube.com/watch?v=fdxgHpCz12k,ゲーム,ストリートファイター,,,,,,,,,\n風見くく,2026/09/29,【 #howtofish  】俺はスナイパーが大好きでな。ストグラのみんなでHow to Fish【風見くく / ななしいんく】,https://www.youtube.com/watch?v=fuiixUS8U3A,コラボ、ゲーム,How to Fish,,,,,,,,,\n幽音しの,2026/09/30,【#雑談】3日目！！おはようのあいさつをここで！！【幽音しの / ななしいんく】#shorts,https://www.youtube.com/watch?v=zo4JBMO28Jw,雑談,,,,,,,,,,\n幽音しの,2026/09/30,【 耐久歌枠 】3万人目指して歌っていく！！１曲聞いてみない？【幽音しの:ななしいんく】　#shorts  #vsinger,https://www.youtube.com/watch?v=-U8P_byeHYY,歌枠,,,,,,,,,,\n幽音しの,2026/09/29,【#雑談】２日目！！おはよ！！朝のあいさつはいかが？？【幽音しの / ななしいんく】#shorts,https://www.youtube.com/watch?v=_xHdFwpUGK8,雑談,,,,,,,,,,\n飛良ひかり,2026/09/29,天下無双ARK┊︎#5 試練の洞窟から配信してます,,ゲーム、スト鯖,ARK、天下無双ARK,,,,,●,,,,\n柚原いづみ,2026/09/30,【#ストグラ】#ストグラSeason2 柚乃いずみの日常～158日目～【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=JzmorN_zL2U,ゲーム、スト鯖,GTAV、ストグラ,,,,,,,,,\nアズリ,2026/09/16,#3【 #SURGETown 】犯罪成功率100%天使のせ〇とくんです【ななしいんく/アズリ】,https://www.youtube.com/watch?v=pQSVQs0TgUg,ゲーム、スト鯖,GTAV、SURGETown,,,,,,,,,\nアズリ,2026/09/17,#4【 #SURGETown 】自分、いつでも&quot;せんとうくん&quot;になれます。【ななしいんく/アズリ】,https://www.youtube.com/watch?v=vHc3V1o4ZBs,ゲーム、スト鯖,GTAV、SURGETown,,,,,,,,,\nアズリ,2026/09/18,#17【 #eldenring  】えるでんさんぽだ！！！！！【ななしいんく/アズリ】,https://www.youtube.com/watch?v=-h177D1SI2Y,,,,,,,,,,,\nアズリ,2026/09/18,#5【 #SURGETown 】初心者メカニック屋さん。たまに傭兵屋さん。【ななしいんく/アズリ】,https://www.youtube.com/watch?v=Y8RPSn2dgvw,ゲーム、スト鯖,GTAV、SURGETown,,,,,,,,,\nアズリ,2026/09/19,#6【 #SURGETown 】せんとくん、お金の使い道を知りたい。【ななしいんく/アズリ】,https://www.youtube.com/watch?v=9HIhXo4Clm8,ゲーム、スト鯖,GTAV、SURGETown,,,,,,,,,\nアズリ,2026/09/20,#7【 #SURGETown 】１週間ありがとうございました！せんとくんでした【ななしいんく/アズリ】,https://www.youtube.com/watch?v=juvQxlHQL80,ゲーム、スト鯖,GTAV、SURGETown,,,,,,,,,\nアズリ,2026/09/22,ハンター大放出で大涙 - biohazard HD REMASTER【ななしいんく/アズリ】,https://www.youtube.com/watch?v=egPZiXh_ysg,,,,,,,,,,,\nアズリ,2026/09/23,高みの見物といきますか - BOMBANANA!【ななしいんく/アズリ＆汐鳴みりね＆緑青くれは】,https://www.youtube.com/watch?v=w_RxK7NsYmQ,,,,,,,,,,,\nアズリ,2026/09/24,ついに厳重に守られた鉄格子の先へ - biohazard HD REMASTER【ななしいんく/アズリ】,https://www.youtube.com/watch?v=VtjcghDpVL0,,,,,,,,,,,\nアズリ,2026/09/25,#17【 #eldenring  】焼き黄金樹いっちょ～【ななしいんく/アズリ】,https://www.youtube.com/watch?v=73c6oNbHkDs,ゲーム,ELDEN RING,,,,,,,,,\nアズリ,2026/09/26,#19【 #eldenring  】雪山(秘)編と絶対神肌倒すマン【ななしいんく/アズリ】,https://www.youtube.com/watch?v=zgb8P4zXCxM,ゲーム,ELDEN RING,,,,,,,,,\nアズリ,2026/09/28,裏切り者!? いったい何スカーなんだ..... - biohazard HD REMASTER【ななしいんく/アズリ】,https://www.youtube.com/watch?v=zOwAe2SRsLE,,BIOHAZARD,,,,,,,,,\nここ・じぇす汰,2026/09/16,【雑談】なんか話し足りない【ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=ISldcRoeCPc,雑談,,,,,,,,,,\nここ・じぇす汰,2026/09/17,【 歌枠 / KARAOKE 】一緒にチルしよう。落ち着く曲縛り【ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=YHemZ0HiDio,歌枠,,,,,,,,,,\nここ・じぇす汰,2026/09/18,【飲酒雑談 / #居酒屋じぇ酒汰 】新居初の手元カメラ‼️🍻【ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=D4vUsofZkgc,雑談、定期枠,飲酒、実写有、居酒屋じぇ酒汰,,,,,,,,,\nここ・じぇす汰,2026/09/21,【 朝活雑談 / ＃ここモニコ 】シルバーウイークは満喫してますか？【ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=GE_jrDNdA-o,雑談、定期枠,ここモニコ,,,,,,,,,\nここ・じぇす汰,2026/09/21,【 Minecraft 人狼 】ぼ…ぼくはやってない…！！ #ななしマイクラ人狼【ここ・じぇす汰視点 / ななしいんく】,https://www.youtube.com/watch?v=mrqy8OkYdSc,ゲーム、コラボ,マインクラフト、ななしマイクラ人狼,宗谷いちか、堰代ミコ、季咲あんこ、飛良ひかり、茜音カンナ、幽音しの、アズリ,,,,,,,,\nここ・じぇす汰,2026/09/26,【悪夢】やきそばに憑りつかれました……【ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=iV43VeyyfeE,雑談,,,,,,,,,,\nここ・じぇす汰,2026/09/28,おバカ3人。これやれんのか……？？ - BOMBANANA!【 瀬島るい / 茜音カンナ / ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=7AF9VbWPxms,ゲーム、コラボ, BOMBANANA,瀬島るい、茜音カンナ,,,,,,,,\nここ・じぇす汰,2026/09/28,このVTuber。朝、向いてません。 ＃ここモニコ【ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=6pvp0QHHcko,雑談,,,,,,,,,,\nここ・じぇす汰,2026/09/23,【大食い】女VTuber2人、ペヤング超超超超超超大盛りペタマックスに挑む。【 #ここ瀬レイ汰の限界突破 / 漆瀬レイ / ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=2Al3AtSYlXE,コラボ、企画,,漆瀬レイ,,,,,途中参加：羽流鷲りりり、天羽衣,,,\nななしいんく公式,2026/09/23,【Vtuber運営スタッフ本音暴露！】背泳ぎの時めっちゃ笑顔そうなVtuber【龍ヶ崎リン/宗谷いちか】#ななしいんく #shorts,https://www.youtube.com/watch?v=Euco7RzVqDQ,,,,,,●,,,,,\nななしいんく公式,2026/09/18,\"【3Dコラボ配信】\"\"重大告知\"\"を賭けた時限爆弾ゲーム＿＿！？【ななしいんく】\",https://www.youtube.com/watch?v=2mXNFkKYTNU,コラボ、記念配信,3D,宗谷いちか、龍ヶ崎リン、家入ポポ、蛇宵ティア、天羽衣、天絆ささは、羽流鷲りりり,,,,,,,,\nぴかまるNS-PT01,2026/09/16,【Liminal:Escape Route】今日も今日とて悪夢見学【ぴかまる NS-PT01/ななしいんく】,https://www.youtube.com/watch?v=OCNz6aZMwJQ,ゲーム,Liminal:Escape Route,,,,,,,,,\nぴかまるNS-PT01,2026/09/19,【感情学習ラジオ】#14『諦観』を理解したい【ぴかまる NS-PT01/ななしいんく】,https://www.youtube.com/watch?v=2F-AI0zeAbo,雑談、定期枠,感情学習ラジオ,,,,,,,,,\nぴかまるNS-PT01,2026/09/20,【Hypogea】スチームパンクロボを堪能【ぴかまる NS-PT01/ななしいんく】,https://www.youtube.com/watch?v=ZpW2M6hEsvo,ゲーム,Hypogea,,,,,,,,,\nぴかまるNS-PT01,2026/09/22,【ダンボール戦機】#12 のびのびクエストBBS 【ぴかまる NS-PT01/ななしいんく】,https://www.youtube.com/watch?v=lGudGd_7xiM,ゲーム,ダンボール戦機,,,,,,,,,\nぴかまるNS-PT01,2026/09/23,【LIMINAL SHIFT】懲りずリミナル散歩【ぴかまる NS-PT01/ななしいんく】,https://www.youtube.com/watch?v=FSEba2EHPa8,ゲーム,LIMINAL SHIFT,,,,,,,,,\nぴかまるNS-PT01,2026/09/26,【感情学習ラジオ】#15『希望』を理解したい【ぴかまる NS-PT01/ななしいんく】,https://www.youtube.com/watch?v=mWlbPEr21Ts,雑談、定期枠,感情学習ラジオ,,,,,,,,,\nぴかまるNS-PT01,2026/09/27,【Penguin Lifter】ペンギンを助け起こすだけのバイトをしよう【ぴかまる NS-PT01/ななしいんく】,https://www.youtube.com/watch?v=FqFBmEXYJbw,ゲーム,Penguin Lifter,,,,,,,,,\n茜音カンナ,2026/09/16,【 朝ラジ 】わんもに！～第155回～【茜音カンナ / ななしいんく】,https://www.youtube.com/watch?v=wjKd7RkVum4,雑談、定期枠,わんもに！,,,,,,,,,\n茜音カンナ,2026/09/17,【 Divine Spell / TRUE 】「レガリア The Three Sacred Stars」OP歌った！ #shorts #animesong 【茜音カンナ / ななしいんく】,https://www.youtube.com/watch?v=RI4FT6ayDfU,,,,,,●,,,,,\n茜音カンナ,2026/09/18,【 日本事故物件監視協会3-JSP- 】完全クリアできないの嫌だから、続きやる。【茜音カンナ / ななしいんく】,https://www.youtube.com/watch?v=vtj3pqqkq5s,ゲーム,日本事故物件監視協会3,,,,,,,,,\n茜音カンナ,2026/09/19,【 雑談 】わんない！～定期お雑談配信～【茜音カンナ / ななしいんく】,https://www.youtube.com/watch?v=lAo0dVCA1yk,雑談、定期枠,わんない！,,,,,,,,,\n茜音カンナ,2026/09/19,【 うたたね - utatane / Leina 】リクエストいただいたので歌った！ #shorts 【茜音カンナ / ななしいんく】,https://www.youtube.com/watch?v=goIw-8_LdRk,,,,,,●,,,,,\n茜音カンナ,2026/09/21,【 #ななしマイクラ人狼 】ガブッ。いや、うちは人だよ？🐺～茜音カンナ視点～【茜音カンナ / ななしいんく】,https://www.youtube.com/watch?v=pRgSVyWRKE8,コラボ、ゲーム,マインクラフト、ななしマイクラ人狼,宗谷いちか、堰代ミコ、季咲あんこ、飛良ひかり、幽音しの、アズリ、ここ・じぇす汰,,,,,,,,\n茜音カンナ,2026/09/23,【 朝ラジ 】わんもに！～第156回～【茜音カンナ / ななしいんく】,https://www.youtube.com/watch?v=lAlrYhDwJOU,雑談、定期枠,わんもに！,,,,,,,,,\n茜音カンナ,2026/09/23,【 #カミすばNight 】Vol.8✨カミすば復活じゃぁぁぁ！！！【 鈴鳴すばる / 茜音カンナ / まりなす / ななしいんく】,https://www.youtube.com/watch?v=qibFWUAtlmM,コラボ、雑談,,鈴鳴すばる,,,,,,,,\n茜音カンナ,2026/09/26,【 雑談 】わんない！～定期お雑談配信～【茜音カンナ / ななしいんく】,https://www.youtube.com/watch?v=Ewvp9_Z9_9U,雑談、定期枠,わんない！,,,,,,,,,\n茜音カンナ,2026/09/27,【 歌枠 】バラードOnly。1週間頑張った皆様に、沁みるお歌を。～sing stream～【茜音カンナ / ななしいんく】,https://www.youtube.com/watch?v=7xjbTGlqGQE,歌枠,,,,,,,,,,\n茜音カンナ,2026/09/28,【 BOMBANANA! 】ウッキー🐵見ざる言わざる聞かざるで爆弾解除だっ💣【 瀬島るい / ここ・じぇす汰 / 茜音カンナ / ななしいんく】,https://www.youtube.com/watch?v=9QRCqgQj15o,ゲーム、コラボ,BOMBANANA,瀬島るい、ここ・じぇす汰,,,,,,,,\n杏戸ゆげ,2026/09/18,ただいま～～～金曜日だよ～～～！！【杏戸ゆげ/ななしいんく】,https://www.youtube.com/watch?v=WKfucO2kJQc,雑談,,,,,,,,,,\n杏戸ゆげ,2026/09/19,【BOMBANANA!】ここあ☆すぺしゃるで爆弾解除💣～*見えない聞こえない話せない🐒【杏戸ゆげ/ななしいんく】,https://www.youtube.com/watch?v=RduImPmxFZc,ゲーム、コラボ,BOMBANANA,心白てと、昏昏アリア,,,,,,,,\n杏戸ゆげ,2026/09/19,【ARK Survival Ascended/天下無双Ark＃1】恐竜さんに会いにいくぞ～～～🦖！！！【杏戸ゆげ/ななしいんく】,https://www.youtube.com/watch?v=EpVZVRyvS2g,ゲーム、スト鯖,天下無双ARK、ARK,,,,,,,,,\n杏戸ゆげ,2026/09/20,【ARK Survival Ascended/天下無双ARK＃2】空飛びたい🦖！！！【杏戸ゆげ/ななしいんく】,https://www.youtube.com/watch?v=wa9qsPnUlmw,ゲーム、スト鯖,天下無双ARK、ARK,,,,,,,,,\n杏戸ゆげ,2026/09/25,【TFT】Discordイベント『パッチノート18.3解説講座 by title＆杏戸ゆげ』【杏戸ゆげ/ななしいんく】,https://www.youtube.com/watch?v=9IOIbCj5h9o,ゲーム、PR配信,,,,,,,,,,\n杏戸ゆげ,2026/09/27,【雀魂】ななしいんく(？)メンバーと麻雀やるよ【杏戸ゆげ/ななしいんく】,https://www.youtube.com/watch?v=dlVWJTs563s,コラボ、ゲーム,雀魂,因幡はねる、蛇宵ティア、歌衣メイカ,,,,,,,,\n杏戸ゆげ,2026/09/22,【#ななし酔いどれオフ呑み】オフコラボ！4人でお酒飲むよ～～～🍻✨【杏戸ゆげ / 羽流鷲りりり / ここ・じぇす汰 / 漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=nRyL62Y-pu0,コラボ、ゲーム,飲酒,羽流鷲りりり、ここ・じぇす汰、漆瀬レイ,,,,,,,,\n因幡はねる,2026/09/19,【METAL GEAR SOLID📦】本日スタート！シルバーウィークはメタルギアだ！【因幡はねる / ななしいんく】,https://www.youtube.com/watch?v=oVKILmdzXGU,ゲーム,METAL GEAR SOLID,,,,,,,,,\n因幡はねる,2026/09/20,【METAL GEAR SOLID📦】赤外線で詰みかけたけどパッションでどうにかする【因幡はねる / ななしいんく】,https://www.youtube.com/watch?v=c6YZ203cHgw,ゲーム,METAL GEAR SOLID,,,,,,,,,\n因幡はねる,2026/09/21,【METAL GEAR SOLID📦】ヒデオってなんなんだ～！！！！！！！【因幡はねる / ななしいんく】,https://www.youtube.com/watch?v=lW8U2FGYmbY,ゲーム,METAL GEAR SOLID,,,,,,,,,\n因幡はねる,2026/09/22,【METAL GEAR SOLID📦】本日最終回！？かっこいいスネークを見せるぞ！！【因幡はねる / ななしいんく】,https://www.youtube.com/watch?v=n3HWRWTNk6A,ゲーム,METAL GEAR SOLID,,,,,,,,,\n因幡はねる,2026/09/25,【METAL GEAR SOLID 2】本日スタート！世界一かっこ良いスネークを見よ👀【因幡はねる / ななしいんく】,https://www.youtube.com/watch?v=FNhQOGaQwqg,ゲーム,METAL GEAR SOLID,,,,,,,,,\n因幡はねる,2026/09/27,【雀魂コラボ】二ノ宮花ちゃんの新衣装が素晴らしすぎるコラボ 歌衣メイカ/杏戸ゆげ/蛇宵ティア【因幡はねる / ななしいんく】,https://www.youtube.com/watch?v=a2w8IefuKrU,コラボ、ゲーム,雀魂,杏戸ゆげ、蛇宵ティア、歌衣メイカ,,,,,,,,\n因幡はねる,2026/09/28,【METAL GEAR SOLID 2】段ボールをかぶった男・・・はて？【因幡はねる / ななしいんく】,https://www.youtube.com/watch?v=S_rtmh-fBA8,ゲーム,METAL GEAR SOLID,,,,,,,,,\n堰代ミコ,2026/09/16,【 歌 】はなうただったりなんだったり。【 堰代ミコ / ななしいんく 】,https://www.youtube.com/watch?v=7w6Uvudazio,歌枠,,,,,,,,,,\n堰代ミコ,2026/09/17,【 BOMBANANA! 】爆弾解除なのに見えない!?話せない!?聞こえない!?💣【 📺堰代ミコ視点 / 宗谷いちか/飛良ひかり 】,https://www.youtube.com/watch?v=i4k6Ic031Yo,ゲーム、コラボ,BOMBANANA,宗谷いちか、飛良ひかり,,,,,,,,\n堰代ミコ,2026/09/19,【 #マイクラ肝試し2026 】初日きちゃ～～ｯ👻探索ぅーーーｯ！！！！【 堰代ミコ / ななしいんく 】,https://www.youtube.com/watch?v=qgrWDxKt2cQ,ゲーム,マインクラフト、マイクラ肝試し,,,,,,,,,\n堰代ミコ,2026/09/20,【 #マイクラ肝試し2026 】肝試し本番！👻進めッ！進めーーーッ！！！👻【 📺堰代ミコ視点 / ななしいんく 】,https://www.youtube.com/watch?v=R0DhofL2Y_I,ゲーム,マインクラフト、マイクラ肝試し,,,,,,,,,\n堰代ミコ,2026/09/21,【 #ななしマイクラ人狼 】マイクラで人狼!?🐺つらないでくださーーーいっ！！！【 📺堰代ミコ視点 / ななしいんく 】,https://www.youtube.com/watch?v=UFcqWPmc93w,ゲーム、コラボ,マインクラフト、ななしマイクラ人狼,宗谷いちか、季咲あんこ、飛良ひかり、茜音カンナ、幽音しの、アズリ、ここ・じぇす汰,,,,,,,,\n堰代ミコ,2026/09/23,【 #マイクラ肝試し2026 】ちる釣り！ちるらん！ちるもぐら！🎣【 堰代ミコ / ななしいんく 】,https://www.youtube.com/watch?v=qjYMjhYcJz8,ゲーム,マインクラフト、マイクラ肝試し,,,,,,,,,\n堰代ミコ,2026/09/24,【 #マイクラ肝試し2026 】生活をしているのかこの世界で......！？🎣【 堰代ミコ / ななしいんく 】,https://www.youtube.com/watch?v=0EGA8BSkBVQ,ゲーム,マインクラフト、マイクラ肝試し,,,,,,,,,\n堰代ミコ,2026/09/25,【 #マイクラ肝試し2026 】今日は街ブラメインでお散歩ｯ！！！👻【 堰代ミコ / ななしいんく 】,https://www.youtube.com/watch?v=sve2kctacps,ゲーム,マインクラフト、マイクラ肝試し,,,,,,,,,\n堰代ミコ,2026/09/27,【 #マイクラ肝試し2026 】びびり二人で過去マップッ！街探索ッ！👻【 📺堰代ミコ視点/ 島村シャルロット 】,https://www.youtube.com/watch?v=DSlvcfPt_mg,ゲーム、コラボ,マインクラフト、マイクラ肝試し,島村シャルロット,,,,,,,,\n堰代ミコ,2026/09/28,【 #マイクラ肝試し2026 】新しい謎解き行くゾーーーッ！！！🔍😼【 📺堰代ミコ視点/ 島村シャルロット 】,https://www.youtube.com/watch?v=h3xfChssSAE,ゲーム、コラボ,マインクラフト、マイクラ肝試し,島村シャルロット,,,,,,,,\n家入ポポ,2026/09/16,【#SURGETown / 9日目】攻撃は最大の防御ポポ！ヘリ頑張りたいポポ！！【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=jDwMq05qIS0,ゲーム、スト鯖,GTAV、SURGETown,,,,,,,,,\n家入ポポ,2026/09/17,【#SURGETown / 10日目】課長がいなくても市民の安全は任せろポポ！【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=47Rd71abx_0,ゲーム、スト鯖,GTAV、SURGETown,,,,,,,,,\n家入ポポ,2026/09/18,エアロピクルスでLet's pickles popo!!!! #shorts #エアロピクルス #家入ポポ,https://www.youtube.com/watch?v=V8iBDvlAMTI,,,,,,●,,,,,\n家入ポポ,2026/09/19,【#SURGETown / 11日目】今日も治安を守っていきますポポ【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=Ye2zJ5Yx_No,ゲーム、スト鯖,GTAV、SURGETown,,,,,,,,,\n家入ポポ,2026/09/19,【#SURGETown / 12日目】今日こそはヘリ大活躍するポポォォォォォ！！！【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=Ats2rhJIyT0,ゲーム、スト鯖,GTAV、SURGETown,,,,,,,,,\n家入ポポ,2026/09/19,【同時視聴】『BLEACH千年血戦編 クライマックスセレクション』放送終了後に重大発表が…！？？【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=eIdtuKrWAkg,同時視聴,,,,,,,,,,\n家入ポポ,2026/09/20,【#SURGETown / 11日目Part2】真夜中も治安を守っていきますポポ【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=HM63SKikmEc,ゲーム、スト鯖,GTAV、SURGETown,,,,,,,,,\n家入ポポ,2026/09/20,【クッキークリッカー雑談】受注生産のグッズを忘れた頃に受け取ると二倍嬉しいポポ【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=MmCACaBIBlM,雑談、定期枠,クッキークリッカー雑談,,,,,,,,,\n家入ポポ,2026/09/20,【#SURGETown / 最終日】警察、ありポポ～！！【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=IXnLUi-zsX0,ゲーム、スト鯖,GTAV、SURGETown,,,,,,,,,\n家入ポポ,2026/09/21,【#天下無双ARK】恐竜の時代へ！どんな出会いがあるポポかなあ【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=i2FX2-6Y4_g,ゲーム、スト鯖,天下無双ARK、ARK,,,,,,,,,\n家入ポポ,2026/09/22,【#天下無双ARK / 2日目】可愛い鳥さんを求めて―――【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=bQhLml_5saU,ゲーム、スト鯖,天下無双ARK、ARK,,,,,,,,,\n家入ポポ,2026/09/23,【#天下無双ARK / 3日目】涙の数だけ強くなるポポ【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=igAfVh_fpQ4,ゲーム、スト鯖,天下無双ARK、ARK,,,,,,,,,\n家入ポポ,2026/09/24,【#天下無双ARK / 4日目】人も恐竜も賑わってきたポポ【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=L9fjiE78ihk,ゲーム、スト鯖,天下無双ARK、ARK,,,,,,,,,\n家入ポポ,2026/09/26,【#天下無双ARK / 5日目】目標発表PP【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=SUST_6FicDs,ゲーム、スト鯖,天下無双ARK、ARK,,,,,,,,,\n家入ポポ,2026/09/26,【同時視聴】『BLEACH千年血戦編 クライマックスセレクション28話』霊王大破壊【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=HIneZd1bnlo,同時視聴,,,,,,,,,,\n家入ポポ,2026/09/28,【VALORANT】初めてのやつ、教わりますポポ【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=cFwL21P-PXk,ゲーム、コラボ,VALORANT,,,,,,,,,\n家入ポポ,2026/09/28,【#天下無双ARK / 6日目】今日のおともだちは…？？【家入ポポ / ななしいんく】,https://www.youtube.com/watch?v=U3uE8HnFIJc,ゲーム、スト鯖,天下無双ARK、ARK,,,,,,,,,\n季咲あんこ,2026/09/16,【 Stardew Valley 】5年目はる23にちめ～！やることまとめたらﾑｹﾞﾝにでてきた～～事件。【 季咲あんこ / ななしいんく 】,https://www.youtube.com/watch?v=sUpJybPWnc8,ゲーム、コラボ,Stardew Valley,白百合リリィ,,,,,,,,\n季咲あんこ,2026/09/17,【 ペーパーマリオRPG 】#10 ついにトビラがひらく～～！？🌟【 季咲あんこ / ななしいんく 】,https://www.youtube.com/watch?v=GrO2iXRnnlY,ゲーム,ペーパーマリオ,,,,,,,,,\n季咲あんこ,2026/09/18,【 きんようびの朝枠 】はやおきするよ！なにかとばったばたの9月。🍂【 季咲あんこ / ななしいんく 】,https://www.youtube.com/watch?v=Xfxz8Q7wSgE,雑談、定期枠,行ってきますって言って！,,,,,,,,,\n季咲あんこ,2026/09/19,【 Slay the Spire 2 】A8ディフェクトやるよう～～！油断したら一瞬でﾀｵﾚﾏｽ。🔥【 季咲あんこ / ななしいんく 】,https://www.youtube.com/watch?v=-YP_XEwqRL4,ゲーム,Slay the Spire 2,,,,,,,,,\n季咲あんこ,2026/09/20,【 原神 】- 空月の歌第8幕 - 「 真実の月 」【 季咲あんこ / ななしいんく 】,https://www.youtube.com/watch?v=ZkExJJ1nNZ0,ゲーム,原神,,,,,,,,,\n季咲あんこ,2026/09/21,【 #ななしマイクラ人狼 】人狼はやだやだやだ。👻⚡ 【 季咲あんこ / ななしいんく 】,https://www.youtube.com/watch?v=cO87SfG37jM,ゲーム、コラボ,マインクラフト、ななしマイクラ人狼,宗谷いちか、堰代ミコ、飛良ひかり、茜音カンナ、幽音しの、アズリ、ここ・じぇす汰,,,,,,,,\n季咲あんこ,2026/09/23,【 Stardew Valley 】5年目なつ8かめ～！今日は図鑑うめたりしたいな～～✧！【 季咲あんこ / ななしいんく 】,https://www.youtube.com/watch?v=QReF7YywjV0,ゲーム,Stardew Valley,白百合リリィ,,,,,,,,\n季咲あんこ,2026/09/28,【 雑談 】えるすりーたのしかったねえ！とか最近のお話とか📝✧【 季咲あんこ / ななしいんく 】,https://www.youtube.com/watch?v=O1DvySYsESU,雑談,,,,,,,,,,\n月野木ちろる,2026/09/18,【歌枠】綺麗な声で人をゆかりん沼へ惑わせるタイプのキモヲタ。　懐かしい＆知る人ぞ知るアニソン・キャラソン中心　【月野木ちろる‐Tirol Tsukinoki‐/ななしいんく】,https://www.youtube.com/watch?v=Gp4Jt_09NJE,歌枠,,,,,,,,,,\n月野木ちろる,2026/09/20,【実写×編み物】　編み物中毒者とまったりお喋りしながら過ごす午後。　#かぎ針 #編み物 #手芸 　【月野木ちろる‐Tirol Tsukinoki‐/ななしいんく】,https://www.youtube.com/watch?v=N15DNgumSrw,雑談,実写有,,,,,,,,,\n月野木ちろる,2026/09/23,【実写×編み物×バイノーラル雑談】　ささやきと編み物ニットセラピー🌿もふもふリフ編み。　#かぎ針 #編み物 #手芸 #asmr 　【月野木ちろる‐Tirol Tsukinoki‐/ななしいんく】,https://www.youtube.com/watch?v=F2odhH4SY80,雑談、ASMR,実写有,,,,,,,,,\n湖南みあ,2026/09/25,【#実写 】もう、これで終わってもいい【ありったけのsexyを】,https://www.youtube.com/watch?v=80Eis-24tMw,雑談,実写有、飲酒,,,,,,,,,\nここ・じぇす汰,2026/09/19,【 サシ飲み / #ここの話 】第1回 湖南みあさんとぶっちゃけトーク🍻【 湖南みあ / ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=rmBNs4q947k,コラボ、企画、雑談,飲酒、ここだけの話,湖南みあ,,,,,,,,\n瑚白ユリ,2026/09/17,お久しぶりです、元気です【瑚白ユリ / ななしいんく】,https://www.youtube.com/watch?v=StFwMmGfxzo,雑談,,,,,,,,,,\n汐鳴みりね,2026/09/16,【ゼルダの伝説 ブレワイ】完全初見🔰ゴロン族の街にやってきました。# 13【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=S1iOwti3ZLc,ゲーム,ゼルダの伝説,,,,,,,,,\n汐鳴みりね,2026/09/17,【ゼルダの伝説 ブレワイ】完全初見🔰本日は祠チャレンジ頑張る回です。# 14【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=qpGcT1Kr5aM,ゲーム,ゼルダの伝説,,,,,,,,,\n汐鳴みりね,2026/09/18,お話ししよ～🎶【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=bPgnip80CKk,雑談,,,,,,,,,,\n汐鳴みりね,2026/09/19,【星のカービィ 夢の泉の物語】完全初見🔰はじめてのカーヴィ。# 1【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=V6IgVBuNoq8,ゲーム,星のカービィ,,,,,,,,,\n汐鳴みりね,2026/09/20,【縦型歌枠】お久しぶりの歌枠だ！！【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=4vSZTiNi1mQ,歌枠,,,,,,,,,,\n汐鳴みりね,2026/09/21,【定期あさ枠】朝ごはん食べるよ #あさにょ【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=vjwaVBpHQBY,雑談、定期枠,あさにょ,,,,,,,,,\n汐鳴みりね,2026/09/22,【ゼルダの伝説 ブレワイ】完全初見🔰マスターソードを抜きました。そのあとは…？# 14【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=BZ5VpD2YXU0,ゲーム,ゼルダの伝説,,,,,,,,,\n汐鳴みりね,2026/09/23,【BOMBANANA!】見えない！聞こえない！喋れない！縛りがある中で協力爆弾解除💣【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=SdX9UmhtdGc,ゲーム、コラボ,BOMBANANA,,,,,,,,,\n汐鳴みりね,2026/09/26,【Detroit: Become Human】完全初見🔰初めてのデトロイト。【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=ilgpbJe-SBg,ゲーム,Detroit: Become Human,,,,,,,,,\n汐鳴みりね,2026/09/27,【Detroit: Become Human】完全初見🔰自分の選ぶ選択が間違ってたって思いたくない。がんばる。【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=KpgcclbUx-M,ゲーム,Detroit: Become Human,,,,,,,,,\n汐鳴みりね,2026/09/28,【定期あさ枠】ランチパックたべる🎶 #あさにょ【汐鳴みりね / ななしいんく】,https://www.youtube.com/watch?v=796RdKkXmdc,雑談、定期枠,あさにょ,,,,,,,,,\n漆瀬レイ,2026/09/16,【朝枠】もにれでぃ！☀ メガネ系執事の優雅な朝枠はこちら【漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=JbCXJroUdcI,雑談、定期枠,もにれでぃ！,,,,,,,,,\n漆瀬レイ,2026/09/16,【 勝利の女神：NIKKE 】完全初見🔰イベントストーリー「OVER ZONE」STORY1を見る‼【漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=cb51Jnb0Aso,,,,,,,,,,,\n漆瀬レイ,2026/09/17,ソ。存在しない都道府県について #shorts #vtuber #新人VTuber #ななしいんく,https://www.youtube.com/watch?v=RFkvYPbzPf0,,,,●,,,,,,,\n漆瀬レイ,2026/09/18,フ。フレネミーな大先輩について【BOMBANANA!】 #shorts #vtuber #新人VTuber #ななしいんく,https://www.youtube.com/watch?v=Dw7UDvy237Q,,,,●,,,,,,,\n漆瀬レイ,2026/09/18,【ゲリラ】おいやばいぞ緊急集合！！！！！！！！【漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=6Zd603k-V0Q,雑談,,,,,,,,,,\n漆瀬レイ,2026/09/20,【ミラー配信】完全初見と見る『ペルソナ４ リバイバルTV』📺✨※ネタバレ注意【P4R/ペルソナ4リバイバル】【漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=C_0Z-Ix69KE,同時視聴,,,,,,,,,,\n漆瀬レイ,2026/09/24,企画と酒とペタマックス【漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=JubUqygf3mo,雑談,,,,,,,,,,\n漆瀬レイ,2026/09/27,【妹に運転を教える】ペーパーのオ↑レ↓が運転教えたる。とりま前見ろ【漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=lo49kKQny-8,ゲーム,妹に運転を教える,,,,,,,,,\n漆瀬レイ,2026/09/28,【 VALORANT 】先輩達とフルパヴァロ🔫💥【杏戸ゆげ / 季咲あんこ / 柚原いづみ / 家入ポポ / 漆瀬レイ / ななしいんく】,https://www.youtube.com/watch?v=K3-g35CZ29Y,ゲーム、コラボ,VALORANT,,,,,,,,,\n蛇宵ティア,2026/09/16,【 SURGE Town #12 】泥酔度合いによっては参加できないかもの日🏢【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=inDwjGzA4o0,ゲーム、スト鯖,GTAV、SURGETown,,,,,,,,,\n蛇宵ティア,2026/09/17,【 SURGE Town #13 】ギョングもあと3日🏢【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=gGp2Ycns1Pk,ゲーム、スト鯖,GTAV、SURGETown,,,,,,,,,\n蛇宵ティア,2026/09/19,【 SURGE Town #14 】GYOの思い出を作る日🏢【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=wUeMFvjAGBI,ゲーム、スト鯖,GTAV、SURGETown,,,,,,,,,\n蛇宵ティア,2026/09/20,【おは宵31時 】水着ってもう終わり…？💭 【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=4avOvYO_m34,雑談、定期枠,おは宵31時,,,,,,,,,\n蛇宵ティア,2026/09/20,【 SURGE Town #15 】最後まで笑って過ごせますように🏢【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=ECWLAIciemg,ゲーム、スト鯖,GTAV、SURGETown,,,,,,,,,\n蛇宵ティア,2026/09/22,【 Alchemy Factory #1 】正式版来たぞー！！！！！【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=hF1IK_6q6sg,ゲーム,Alchemy Factory,,,,,,,,,\n蛇宵ティア,2026/09/22,【 Breathedge 2 #1 】宇宙版サブノーティカ!? 絶対楽しいやつだ🚀【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=1CG4-u4lliA,ゲーム,Breathedge,,,,,,,,,\n蛇宵ティア,2026/09/23,【 Breathedge 2 #2 】修理とサブクエと酸素とご飯🚀【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=0T1VCvDmULg,ゲーム,Breathedge,,,,,,,,,\n蛇宵ティア,2026/09/24,【 Alchemy Factory #2 】8割の可能性でアルケミーファクトリーの待機所【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=C3bJGr2WoRI,ゲーム,Alchemy Factory,,,,,,,,,\n蛇宵ティア,2026/09/24,【 Breathedge 2 #3 】新拠点からストーリー進めていくぞ🚀【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=lWkH8fGJjRU,ゲーム,Breathedge,,,,,,,,,\n蛇宵ティア,2026/09/24,【 How to Fish 】ギョングのみんなと釣り出来るなんて最高やないか【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=XYDiLx3-tng,ゲーム、コラボ,How to Fish ,YufuNa、あおはる、ぶっちー、ゆう。、佐藤あにめ、花前ハル、黒燿リラ,,,,,,,,\n蛇宵ティア,2026/09/26,【 Fallout 3 #1 】人は過ちを繰り返す【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=7Pls_II2_UY,ゲーム,Fallout,,,,,,,,,\n蛇宵ティア,2026/09/27,【 #雀魂 】先輩に挑むぞ～！！🀄【 蛇宵ティア  因幡はねる 杏戸ゆげ 歌衣メイカ  / ななしいんく 】,https://www.youtube.com/watch?v=RFGc-Zer-yY,ゲーム、コラボ,麻雀、雀魂,因幡はねる、杏戸ゆげ、歌衣メイカ,,,,,,,,\n蛇宵ティア,2026/09/27,【おは宵31時 】実はUSJハロウィン行ってた話🎃💭 【 蛇宵ティア / ななしいんく 】,https://www.youtube.com/watch?v=4Xu-naLq3fg,雑談、定期枠,おは宵31時,カプラ・リブラス、儚牙紺、まいたけ,,,,,,,,\n蛇宵ティア,2026/09/28,【 How to Fish 】初めてのメンバーで釣りしていくぞ🐡【 蛇宵ティア カプラ・リブラス 儚牙紺 まいたけ / ななしいんく 】,https://www.youtube.com/watch?v=K22hTNrV14k,ゲーム、コラボ,How to Fish ,,,,,,,,,\n宗谷いちか,2026/09/17,【BOMBANANA!】爆弾解除💣見ざる！聞かざる！言わざる縛り！【宗谷いちか /ななしいんく】,https://www.youtube.com/watch?v=5QLAcRvA-PQ,ゲーム、コラボ,BOMBANANA,堰代ミコ、飛良ひかり,,,,,,,,\n宗谷いちか,2026/09/19,#2【ゼノブレイド2】初見プレイ✨楽園を目指す少年少女の物語が始まる‼️【宗谷いちか /ななしいんく】,https://www.youtube.com/watch?v=SLkbIxmAE8c,ゲーム,ゼノブレイド,,,,,,,,,\n宗谷いちか,2026/09/21,【#ななしマイクラ人狼】潔白＆無害なそやちゃんは人狼ではナイ！！！！！！！🐺🔥【宗谷いちか /ななしいんく】,https://www.youtube.com/watch?v=gcwPKVsLQkg,ゲーム、コラボ,マインクラフト、ななしマイクラ人狼,堰代ミコ、季咲あんこ、飛良ひかり、幽音しの、アズリ、ここ・じぇす汰,,,,,,,,\n宗谷いちか,2026/09/26,#3【ゼノブレイド2】初見プレイ✨楽園を目指す少年少女の物語が始まる‼️【宗谷いちか /ななしいんく】,https://www.youtube.com/watch?v=cxCxxfWqF5s,ゲーム,ゼノブレイド,,,,,,,,,\n茜音カンナ,2026/09/16,【 飲酒コラボ 】#居酒屋カンナ 「なないちかんな」で飲むぞ🥂【茜音カンナ / ななしいんく】,https://www.youtube.com/watch?v=6jYF6ctdGxY,雑談、コラボ,飲酒,宗谷いちか、漆瀬レイ,,,,,途中参加：西園寺メアリ、瀬島るい、蛇宵ティア、天羽衣、緑青くれは、ここ・じぇす汰,,,\n宗谷いちか,2026/09/22,【逆凸ビンゴ】メンバーに逆凸📞ワードを言わせてビンゴせよ😎‼️‼️【宗谷いちか/龍ヶ崎リン/ななしいんく】,https://www.youtube.com/watch?v=AMBywazrTKw,コラボ、企画,,龍ヶ崎リン,,,,,凸参加：日向ましゅ、汐鳴みりね、瀬島るい、飛良ひかり、堰代ミコ,,,\n宗谷いちか,2026/09/23,【ガチ実母】Vtuber母親対抗学力テスト、開幕──。【龍ヶ崎リン / 宗谷いちか /ななしいんく】,https://www.youtube.com/watch?v=mkrNmbvW2L0,コラボ、企画,,龍ヶ崎リン,,,,,,,,\n瀬島るい,2026/09/18,【 朝活 】初見さんもおはよ💗お酒ってすごいなって話🐶💉【 瀬島るい┋ななしいんく】,https://www.youtube.com/watch?v=Bf_G_Hf91XE,雑談、定期枠,朝金出勤せしナース,,,,,,,,,\n瀬島るい,2026/09/22,【 雑談 】お　久　し　ぶ　り　で　す　【 瀬島るい┋ななしいんく 】,https://www.youtube.com/watch?v=VElecjJz9M4,雑談,,,,,,,,,,\n瀬島るい,2026/09/25,【 朝活 】初見さんもおはよ💗これからが楽しみすぎる件について🐶💉【 瀬島るい┋ななしいんく】,https://www.youtube.com/watch?v=hlb4r7DS81U,雑談、定期枠,朝金出勤せしナース,,,,,,,,,\n瀬島るい,2026/09/28,【 BOMBANANA! 】「見猿」「聞か猿」「言わ猿」爆弾解除🐵⁉この３人でできる気がしｎ【 茜音カンナ┋ここ・じぇす汰┋瀬島るい┋ななしいんく】,https://www.youtube.com/watch?v=au1MGfNtXqA,ゲーム、コラボ,BOMBANANA,茜音カンナ、ここ・じぇす汰,,,,,,,,\nここ・じぇす汰,2026/09/25,【飲酒】酒の席なら無礼講ですよね？3:3の先輩新人飲み🍻【 瀬島るい / 茜音カンナ / 日向ましゅ / 緑青くれは / 漆瀬レイ / ここ・じぇす汰 / ななしいんく】,https://www.youtube.com/watch?v=pDwAkXE4iRg,雑談、コラボ,飲酒,瀬島るい、茜音カンナ、日向ましゅ、緑青くれは、漆瀬レイ,,,,,,,,\n飛良ひかり,2026/09/17,【#ひかるいティータイム】オフイベのお話やお昼まったり雑談たーいむ！【瀬島るい / 飛良ひかり / ななしいんく】,https://www.youtube.com/watch?v=lEHhkIdYnQg,雑談、定期枠,ひかるいティータイム,瀬島るい,,,,,,,,\n瀬島るい,2026/09/27,【 #ひかるいおふいべ2026 】お知らせもあるよ💌願掛けしませんか？【 飛良ひかり┋瀬島るい┋ななしいんく】,https://www.youtube.com/watch?v=b2Tr2M2JZNQ,企画,ひかるいおふいべ2026,飛良ひかり,,,,,,,,\n西園寺メアリ,2026/09/19,【ホラー】怖すぎると噂のホラゲ…いけるのか？？  / Dread Flats - 凶寓 -【西園寺メアリ / ななしいんく】,https://www.youtube.com/watch?v=KrwwxytuA9Q,ゲーム,Dread Flats,,,,,,,,,\n西園寺メアリ,2026/09/19,【雑談】ねぇ、かまってくれないの？【西園寺メアリ / ななしいんく】,https://www.youtube.com/watch?v=aRl--ZzDO4c,雑談,,,,,,,,,,\n西園寺メアリ,2026/09/20,【夢物語の街】のんびりお片付けで癒されよう！ドット絵お片付け【西園寺メアリ / ななしいんく】,https://www.youtube.com/watch?v=WpWAeKpGkgA,ゲーム,夢物語の街,,,,,,,,,\n西園寺メアリ,2026/09/21,【いってらっしゃいラジオ】胸を張って秋を楽しみたい！【西園寺メアリ / ななしいんく】,https://www.youtube.com/watch?v=esZprMywxnA,,,,,,,,,,,\n西園寺メアリ,2026/09/22,【夢物語の街】最高に好きなチルゲーム！ドット絵お片付け【西園寺メアリ / ななしいんく】,https://www.youtube.com/watch?v=MVR710rBQhI,ゲーム,夢物語の街,,,,,,,,,\n西園寺メアリ,2026/09/18,【湖南みあ/対談】歌える酒カス胃袋掴み系婚活Vtuber！いらっしゃい  #ななし調査【西園寺メアリ / ななしいんく】,https://www.youtube.com/watch?v=Rd6t5ypZrhk,コラボ、雑談、企画,ななし調査,湖南みあ,,,,,,,,\n漆瀬レイ,2026/09/21,【#ななしランキングクイズ】協力して誰の何のランキングか当てろ！！！【 西園寺メアリ / 湖南みあ / 蛇宵ティア / 漆瀬レイ / ななしいんく】,https://youtu.be/wY3sJSaG-RM,コラボ、企画,,西園寺メアリ、湖南みあ、蛇宵ティア,,,,,,,,\n西園寺メアリ,2026/09/16,【#ななし酔っ払い人狼】酒を呑みながら人狼したら、絶対おもしろい！！【西園寺メアリ / ななしいんく】,https://www.youtube.com/watch?v=YfAspb6LEGc,コラボ、企画,飲酒,瀬島るい、蛇宵ティア、天羽衣、緑青くれは、ここ・じぇす汰,,,,,,,,\n天羽衣,2026/09/17,☾ ໋〖 誕生日後 〗　　大　反　省　会　　〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=JxK1clMJREo,雑談,,,,,,,,,,\n天羽衣,2026/09/20,☾ ໋〖 Morning stream 〗グッズ発売したのです .ᐟ.ᐟ⏰#朝羽衣〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=Q5J8in5fujQ,雑談、定期枠,朝羽衣,,,,,,,,,\n天羽衣,2026/09/21,☾ ໋ #5〖 FF10-2 〗深夜チルでファイナルファンタジーX-2です .ᐟ.ᐟ🗡#ファイナルファンタジーX-2〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=l1JTlDPn7wA,ゲーム,ファイナルファンタジー,,,,,,,,,\n天羽衣,2026/09/22,☾ ໋ #6〖 FF10-2 〗深夜チルでファイナルファンタジーX-2です .ᐟ.ᐟ🗡#ファイナルファンタジーX-2〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=8nbypgG9-dg,ゲーム,ファイナルファンタジー,,,,,,,,,\n天羽衣,2026/09/23,☾ ໋ #7〖 FF10-2 〗深夜チルでファイナルファンタジーX-2です .ᐟ.ᐟ🗡#ファイナルファンタジーX-2〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=DAN1FK59-Lg,ゲーム,ファイナルファンタジー,,,,,,,,,\n天羽衣,2026/09/27,☾ ໋〖 キレない 〗声でAI妹に運転を教えてやるんです .ᐟ.ᐟ（無免許）💥#妹に運転を教える 〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=9PtBDUF9kTk,ゲーム,妹に運転を教える,,,,,,,,,\n天羽衣,2026/09/27,☾ ໋ #8〖 FF10-2 〗深夜チルでファイナルファンタジーX-2です .ᐟ.ᐟ🗡#ファイナルファンタジーX-2〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=JYl5HzrqTI8,ゲーム,ファイナルファンタジー,,,,,,,,,\n天羽衣,2026/09/27,☾ ໋〖 Morning stream 〗グッズまもなく終了です .ᐟ.ᐟ⏰#朝羽衣〖 天羽衣┊ななしいんく 〗,https://www.youtube.com/watch?v=ohYXDbanVgI,雑談、定期枠,朝羽衣,,,,,,,,,\n天絆ささは,2026/09/17,【#朝活】先生におはよう言ってみようね？木曜あさから元気になれる雑談☀️「おまもりラジオ」🎋【天絆ささは￤ななしいんく】,https://www.youtube.com/watch?v=FxFoRX6eLmY,雑談,おまもりラジオ,,,,,,,,,\n天絆ささは,2026/09/19,【 でっかいお顔雑談 】3Dライブに出られることになりました！🌸🌷🎊YATTA！【天絆ささは￤ななしいんく】,https://www.youtube.com/watch?v=C4XB-ND_8B4,雑談,,,,,,,,,,\n天絆ささは,2026/09/26,【 タンポポは耐える。】どうも、昼下がりのタンポポです♫ いじめないでください。【 天絆ささは￤ななしいんく 】,https://www.youtube.com/watch?v=etZD0Jfm4ek,ゲーム,タンポポは耐える。,,,,,,,,,\n島村シャルロット,2026/09/16,【睡眠導入配信】第２４回　Sleep-sheep　#シャルのひつじ【島村シャルロット / ななしいんく】,https://www.youtube.com/watch?v=oKhkDGg4wTs,雑談、定期枠,Sleep-sheep,,,,,,,,,\n島村シャルロット,2026/09/22,【睡眠導入配信】第２５回　Sleep-sheep　#シャルのひつじ【島村シャルロット / ななしいんく】,https://www.youtube.com/watch?v=XrQAf48Ys9E,雑談、定期枠,Sleep-sheep,,,,,,,,,\n島村シャルロット,2026/09/26,【Minecraft】ルルイエ強化合宿！！ルルイエのスコアを伸ばしたい！　#マイクラ肝試し2026 　#シャルのひつじ【島村シャルロット / ななしいんく】,https://www.youtube.com/watch?v=9KM4P8Q2QBU,ゲーム,マインクラフト、マイクラ肝試し,,,,,,,,,\n島村シャルロット,2026/09/27,【Minecraft】堰代さんとマイクラ肝試しの過去マップに挑戦！！！　#マイクラ肝試し2026 　#にこぷい【島村シャルロット / ななしいんく】,https://www.youtube.com/watch?v=CrmaCL_Babs,ゲーム,マインクラフト、マイクラ肝試し,堰代ミコ,,,,,,,,\n島村シャルロット,2026/09/28,【Minecraft】堰代さんとマイクラ肝試しの新しい謎解きに挑戦します！！！　#マイクラ肝試し2026 　#にこぷい【島村シャルロット / ななしいんく】,https://www.youtube.com/watch?v=zvRY9gzvJtQ,ゲーム,マインクラフト、マイクラ肝試し,堰代ミコ,,,,,,,,\n島村シャルロット、堰代ミコ,2026/09/28,【#にこぷい】おやつの時間に食べる「月見系ご飯」！お互い何を選ぶかな？？　【島村シャルロット / ななしいんく】,https://www.youtube.com/watch?v=1kEONr2Ruk8,雑談、定期枠,にこぷい,堰代ミコ,,,,,,,,\n瀬島るい,2026/09/24,【 #VS看護国試 】一般人が看護師国家試験に挑戦💮ゲストは島村シャルロットさん♣️❄【 瀬島るい┋ななしいんく】,https://www.youtube.com/watch?v=uATfr-iytzo,企画、定期枠,VS看護国試,島村シャルロット,,,,,,,,\n日向ましゅ,2026/09/20,【 雑談 】いろいろありました【 日向ましゅ / ななしいんく 】,https://www.youtube.com/watch?v=WKUE3oF9FS4,雑談,,,,,,,,,,\n日向ましゅ,2026/09/20,【 #マイクラ肝試し2026 】はじめてのマイクラ肝試し👻【 堰代ミコ / 柚原いづみ / 飛良ひかり / 日向ましゅ / ななしいんく 】,https://www.youtube.com/watch?v=S16cdgTl__0,ゲーム、コラボ,マインクラフト、マイクラ肝試し,堰代ミコ、柚原いづみ、飛良ひかり,,,,,,,,\n飛良ひかり,2026/09/17,【BOMBANANA!】見ざる！聞かざる！言わざる！で爆弾解除するぞー！！【宗谷いちか / 堰代ミコ / 飛良ひかり / ななしいんく】,https://www.youtube.com/watch?v=dvz7Eh1uzrI,ゲーム、コラボ,BOMBANANA,宗谷いちか、堰代ミコ,,,,,,,,\n飛良ひかり,2026/09/20,【#マイクラ肝試し2026】初参加！超絶怖がりのマイクラ肝試し視点【堰代ミコ / 柚原いづみ / 日向ましゅ / 飛良ひかり / ななしいんく】,https://www.youtube.com/watch?v=FYG9tpoo5qY,ゲーム、コラボ,マインクラフト、マイクラ肝試し,堰代ミコ、柚原いづみ、日向ましゅ,,,,,,,,\n飛良ひかり,2026/09/21,【#ななしマイクラ人狼】嘘つくのが超絶うますぎる視点【飛良ひかり / ななしいんく】,https://www.youtube.com/watch?v=mpw5m-8lvcs,ゲーム、コラボ,マインクラフト、ななしマイクラ人狼,宗谷いちか、堰代ミコ、季咲あんこ、茜音カンナ、幽音しの、アズリ、ここ・じぇす汰,,,,,,,,\n飛良ひかり,2026/09/24,【あさひか！】最近あったことお話しするよ～！！【飛良ひかり / ななしいんく】,https://www.youtube.com/watch?v=97h6ZpEhsLI,雑談、コラボ,あさひか！,家入ポポ、赤彩みあ、山黒音玄、水上蒼太,,,,,,,,\n風見くく,2026/09/19,【ゼルダの伝説 風のタクト】たぶん一番大変な苦行回。【風見くく / ななしいんく】,https://www.youtube.com/watch?v=RLU7dLQona4,ゲーム,ゼルダの伝説,,,,,,,,,\n風見くく,2026/09/20,【 #逆転検事 】俺の逆転検事をみてくれ。Part２【風見くく / ななしいんく】,https://www.youtube.com/watch?v=yj6J4rvr1PQ,ゲーム,逆転検事,,,,,,,,,\n風見くく,2026/09/21,【 #NEEDYGIRLOVERDOSE 】はい、昇天 ഒ˖° 配信者はこのくらい承認欲求あるべきだよな。ガチメンヘラがやる【風見くく / ななしいんく】,https://www.youtube.com/watch?v=M6XsgD68w-o,ゲーム,NEEDY GIRL OVERDOSE,,,,,,,,,\n風見くく,2026/09/21,【 #NEEDYGIRLOVERDOSE 】はい、昇天 ഒ˖° 配信者はこのくらい承認欲求あるべきだよな。ガチメンヘラがやる【風見くく / ななしいんく】,https://www.youtube.com/watch?v=M6XsgD68w-o,ゲーム,NEEDY GIRL OVERDOSE,,,,,,,,,\n風見くく,2026/09/22,【 #タンポポは耐える。 】明日耐えられないかも知れないので自認タンポポで鍛える🌻←ひまわり【風見くく / ななしいんく】,https://www.youtube.com/watch?v=ojuFK46W7Ao,ゲーム,タンポポは耐える。,,,,,,,,,\n風見くく,2026/09/23,【 #スーパーリアル麻雀 】コンプライアンスがなんだってんだ。13万人記念脱衣麻雀【風見くく / ななしいんく】,https://www.youtube.com/watch?v=Ael6vBwwstQ,ゲーム、記念配信,スーパーリアル麻雀、麻雀,,,,,,,,,\n風見くく,2026/09/26,【 #逆転検事 】俺の逆転検事をみてくれ。Part３【風見くく / ななしいんく】,https://www.youtube.com/watch?v=glMd-CzQIrE,ゲーム,逆転検事,,,,,,,,,\n風見くく,2026/09/28,【 #えるすりー12 】温度差でみんなを魅了させたこだわり裏話と大ガバの話【風見くく / ななしいんく】,https://www.youtube.com/watch?v=-AzUzvDBhjY,雑談,,,,,,,,,,\n幽音しの,2026/09/18,【#apexlegends 】にこつんとえぺ！！！！！！！！！！開幕したね！！【幽音しの:ななしいんく】,https://www.youtube.com/watch?v=Lda6s_7-bus,ゲーム、コラボ,ニコラ･クラエス,,,,,,,,,\n幽音しの,2026/09/19,【誕生日カウントダウン配信】重大告知アリ！３０分以内にわさびなすを食べきらないと告知できない！？　【幽音しの:ななしいんく】　 #vtuber #vsinger,https://www.youtube.com/watch?v=-qrPCW363rQ,記念配信,誕生日,,,,,,,,,\n幽音しの,2026/09/20,【 誕生日配信 】お家3D歌枠！君と一緒に歌いたい曲があるんだ！【幽音しの:ななしいんく】,https://www.youtube.com/watch?v=Yq5Rwowh1b0,記念配信、歌枠,3D、誕生日,,,,,,,,,\n幽音しの,2026/09/21,【 #ななしマイクラ人狼 】この中に人狼がいるなんて、、信じられないわ！！幽音しの:ななしいんく】,https://www.youtube.com/watch?v=sPti8TilNy8,ゲーム、コラボ,マインクラフト、ななしマイクラ人狼,宗谷いちか、堰代ミコ、季咲あんこ、飛良ひかり、茜音カンナ、アズリ、ここ・じぇす汰,,,,,,,,\n幽音しの,2026/09/24,【#弾き語り】１時間であなたを眠りに誘う歌枠【幽音しの / ななしいんく】#shorts,https://www.youtube.com/watch?v=rHzBEOLPL04,歌枠,,,,,,,,,,\n幽音しの,2026/09/25,【3D弾き語り】 Perfect Day / supercell #vtuber  #shorts  #弾き語り,https://www.youtube.com/watch?v=jYCMFYvxpxE,,,,,,●,,,,,\n幽音しの,2026/09/25,【 スパチャ読み&名前書き 】誕生日のお祝いありがとうございました！！とっても大感謝✌【幽音しの:ななしいんく】#vtuber,https://www.youtube.com/watch?v=GtihM-BtsEI,雑談,,,,,,,,,,\n幽音しの,2026/09/27,【 今年最後の夏】ここは夏フェスじゃ～～～～！！！！！【幽音しの:ななしいんく】　#弾き語り　#shorts,https://www.youtube.com/watch?v=Q2ePu7ziO2s,歌枠,,,,,,,,,,\n幽音しの,2026/09/28,【#弾き語り】新曲公開された～～～！！さわやかな歌枠を【幽音しの / ななしいんく】#shorts,https://www.youtube.com/watch?v=yTELu9wmtMI,歌枠,,,,,,,,,,\n幽音しの,2026/09/28,【#雑談】今日から1週間朝活！！！！！！！！！！！！なんですけれども【幽音しの / ななしいんく】#shorts,https://www.youtube.com/watch?v=WlN_BUO4diY,雑談,,,,,,,,,,\n柚原いづみ,2026/09/16,【GTA5】#SURGETown 5日目～お車、拝見します～【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=a1gQROylgYw,ゲーム、スト鯖,GTAV、SURGETown,,,,,,,,,\n柚原いづみ,2026/09/16,【#ストグラ】#ストグラSeason2 柚乃いずみの日常～155日目～【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=RBto6ZecRvw,ゲーム、スト鯖,GTAV、ストグラ,,,,,,,,,\n柚原いづみ,2026/09/17,【GTA5】#SURGETown 6日目～ラスト出勤！～【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=ZjeyaMXmUJ8,ゲーム、スト鯖,GTAV、SURGETown,,,,,,,,,\n柚原いづみ,2026/09/19,【ARK: Survival Evolved】#天下無双ARK 1日目！【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=iRB3kK9JcWg,ゲーム、スト鯖,天下無双ARK、ARK,,,,,,,,,\n柚原いづみ,2026/09/20,【#マイクラ肝試し2025】どっちかというと妖怪側。w/ 堰代ミコ / 島飛良ひかり / 日向ましゅ【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=EBqHjIrTowc,ゲーム、コラボ,マインクラフト、マイクラ肝試し,堰代ミコ、飛良ひかり、日向ましゅ,,,,,,,,\n柚原いづみ,2026/09/20,【ARK: Survival Evolved】#天下無双ARK 2日目！【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=U-239foI9BM,ゲーム、スト鯖,天下無双ARK、ARK,,,,,,,,,\n柚原いづみ,2026/09/23,【#ストグラ】#ストグラSeason2 柚乃いずみの日常～156日目～【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=40V0sXSRxsI,ゲーム、スト鯖,GTAV、ストグラ,,,,,,,,,\n柚原いづみ,2026/09/26,【#ストグラ】#ストグラSeason2 柚乃いずみの日常～157日目～【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=KD6QCZ1zzoo,ゲーム、スト鯖,GTAV、ストグラ,,,,,,,,,\n柚原いづみ,2026/09/28,【ストリートファイター6】#あきひろ幼稚園 対戦会！ w/ あきら / 咲乃もこ / 空星きらめ / りゅうせい☆ろたん【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=7JA0Y4hFEq8,ゲーム、コラボ,ストリートファイター,あきら、咲乃もこ、空星きらめ、龍惺ろたん,,,,,,,,\n柚原いづみ,2026/09/28,【VALORANT】ななしフルパヴァロ！w/ 杏戸ゆげ / 季咲あんこ / 家入ポポ / 漆瀬レイ【柚原いづみ / ななしいんく】,https://www.youtube.com/watch?v=khHtCCvYw60,ゲーム、コラボ,VAORANT,,,,,,,,,\n龍ヶ崎リン,2026/09/17,【FF7クライシスコア】FF7の前日譚を描いた「クライシス コア -ファイナルファンタジーVII- リユニオン」初見実況プレイ #2【龍ヶ崎リン / ななしいんく】,https://www.youtube.com/watch?v=6YyfIzkJgPs,ゲーム,ファイナルファンタジー,,,,,,,,,\n龍ヶ崎リン,2026/09/22,【FF7クライシスコア】最終回！FF7の前日譚を描いた「クライシス コア -ファイナルファンタジーVII- リユニオン」初見実況プレイ #3【龍ヶ崎リン / ななしいんく】,https://www.youtube.com/watch?v=YyigWo9RKHM,ゲーム,ファイナルファンタジー,,,,,,,,,\n龍ヶ崎リン,2026/09/26,よお【龍ヶ崎リン / ななしいんく】,https://www.youtube.com/watch?v=6laFnUQcc9Y,雑談,,,,,,,,,,\n龍ヶ崎リン,2026/09/28,コンココンコンココンコンコンを踊る龍ヶ崎リン,https://www.youtube.com/watch?v=3owmizei6LM,,,,,,●,,,,,\nアズリ,2026/09/16,Vtuberの大先輩悪魔から学ぶ!! -天使の対談室【ななしいんく/アズリ＆龍ヶ崎リン】,https://www.youtube.com/watch?v=EwAzpXkPIVM,コラボ、雑談,,龍ヶ崎リン,,,,,,,,\n緑青くれは,2026/09/18,【 ホラゲー/ Don’t Drop The Cake 】難易度極限❔❕なにが起こっても絶対にケーキを落としてはいけないッッ🎂👻【緑青くれは / ななしいんく】,https://www.youtube.com/watch?v=wwj5YCxIMvg,ゲーム,Don’t Drop The Cake,,,,,,,,,\n緑青くれは,2026/09/19,#5【スーパーマリオサンシャイン】完全初見❕後半戦のシャイン集めでクリア一直線だ～ッ🌴🌞【#新人Vtuber/緑青くれは】,https://www.youtube.com/watch?v=Y3a33ZZEE68,ゲーム,スーパーマリオサンシャイン,,,,,,,,,\n緑青くれは,2026/09/20,【 ホラゲー/ いえのあじ 】不気味すぎる👻”何か”がおかしい探索型じわじわ日常浸食ホラー🍚🥢【緑青くれは / ななしいんく】,https://www.youtube.com/watch?v=FEx-Izo2tPg,ゲーム,いえのあじ,,,,,,,,,\n緑青くれは,2026/09/21,【深夜チル雑談】お久しぶりのチルタイム💫まったりお喋りタイムのリベンジだぜっ🌃🌟【緑青くれは / ななしいんく】,https://www.youtube.com/watch?v=6miVkv0WmSM,雑談,,,,,,,,,,\n緑青くれは,2026/09/23,【BOMBANANA!】友情破壊💥見えない聞こえない喋れない状態で爆弾解除いっくぞ～ッ🐒💣【緑青くれは・汐鳴みりね・アズリ / ななしいんく 】,https://www.youtube.com/watch?v=UjHJS3QqhjU,ゲーム、コラボ,BOMBANANA,汐鳴みりね、アズリ,,,,,,,,\n緑青くれは,2026/09/26,#6【スーパーマリオサンシャイン】攻略不可❕❔シャイン120枚コンプリートの暴走旅スタートだッ🌴🌞【#新人Vtuber/緑青くれは】,https://www.youtube.com/watch?v=TkIriRc0LCw,ゲーム,スーパーマリオサンシャイン,,,,,,,,,\n緑青くれは,2026/09/27,【 妹に運転を教える 】喧嘩不可避👊妹にブチ切れながら助手席でヤジ飛ばすぞ～🚗💢【緑青くれは / ななしいんく】,https://www.youtube.com/watch?v=xtXnhukEZF0,ゲーム,妹に運転を教える,,,,,,,,,\n緑青くれは,2026/09/28,【雑談 / Free Talk】9月最後のお雑談💭くれは茶房も衣替えの季節だぜっ🌃🌟【緑青くれは / ななしいんく】,https://www.youtube.com/watch?v=xRTonZZdhao,雑談,,,,,,,,,,", "talents.csv": "﻿\"名前\",\"色\"\n\"因幡はねる\",\"#F3C640\"\n\"宗谷いちか\",\"#59C3E1\"\n\"日ノ隈らん\",\"#8FC31F\"\n\"宇森ひなこ\",\"#f799d6\"\n\"稲荷くろむ\",\"#b03131\"\n\"蒼月エリ\",\"#bac7d6\"\n\"周防パトラ\",\"#D8346E\"\n\"島村シャルロット\",\"#004098\"\n\"西園寺メアリ\",\"#7E318E\"\n\"堰代ミコ\",\"#47885E\"\n\"杏戸ゆげ\",\"#B7CDDA\"\n\"鴨見カモミ\",\"#7b9644\"\n\"花奏かのん\",\"#95D0C0\"\n\"季咲あんこ\",\"#F3A8B4\"\n\"風見くく\",\"#f08437\"\n\"柚原いづみ\",\"#A16945\"\n\"獅子王クリス\",\"#2EB6AA\"\n\"龍ヶ崎リン\",\"#C8161D\"\n\"虎城アンナ\",\"#9070AE\"\n\"灰原あかね\",\"#CC99FF\"\n\"白宮みみ\",\"#F8F4E6\"\n\"羽柴なつみ\",\"#a3d6a3\"\n\"不磨わっと\",\"#9C8DA9\"\n\"小森めと\",\"#f0b502\"\n\"瀬島るい\",\"#9D3636\"\n\"飛良ひかり\",\"#EA998F\"\n\"大浦るかこ\",\"#2C637A\"\n\"月野木ちろる\",\"#75C5B5\"\n\"湖南みあ\",\"#FFE893\"\n\"紫水キキ\",\"#724598\"\n\"家入ポポ\",\"#FFF100\"\n\"茜音カンナ\",\"#D92731\"\n\"涼海ネモ\",\"#0068B7\"\n\"橙里セイ\",\"#F0831E\"\n\"瑚白ユリ\",\"#EAEFF9\"\n\"狼森メイ\",\"#e67696\"\n\"蛇宵ティア\",\"#6879ba\"\n\"天羽衣\",\"#bbdcf4\"\n\"いなうるう\",\"#dab4d4\"\n\"日向ましゅ\",\"#f3dd6d\"\n\"天絆ささは\",\"#d9edbd\"\n\"幽音しの\",\"#98d6f2\"\n\"羽流鷲りりり\",\"#996699\"\n\"アズリ\",\"#dcb067\"\n\"緑青くれは\",\"#ceebe0\"\n\"ここ・じぇす汰\",\"#ecbed5\"\n\"汐鳴みりね\",\"#b6566a\"\n\"漆瀬レイ\",\"#d6d3dd\"\n\"ぴかまる NS-PT01\",\"#333231\"\n\"ななしいんく公式\",\"#1E0064\"\n", "aliases.csv": "﻿\"ストリートファイター\",\"STREET FIGHTER\"\n\"サイレントヒル\",\"SILENT HILL\"\n\"マインクラフト\",\"マイクラ\",\"Minecraft\"\n"};
+</script>
+<script>
+/* ななしいんく配信アーカイブ 公開サイト
+   データは archives.csv と talents.csv を読み込みます。このファイルは通常さわらなくてOKです。 */
+(function () {
+'use strict';
+
+var PER_OPTIONS = [10, 20, 50, 100];
+var DEFAULT_PER = 20;
+var WD = ['日', '月', '火', '水', '木', '金', '土'];
+var GROUPS = [
+  /* 配信者(ゲスト出演も含む)。2人以上選ぶと、その全員が出ている配信に絞る */
+  { id: 'cast', label: '配信者', param: 'cast', mode: 'all', vals: function (i) { return i.whoVals || i.parts; } },
+  { id: 'genre', label: 'ジャンル', param: 'genre', vals: function (i) { return i.genres; } },
+  { id: 'kind', label: '形式', param: 'kind', vals: function (i) { return [KIND_LABEL[i.kind]]; } },
+  { id: 'sub', label: '詳細ジャンル', param: 'sub', vals: function (i) { return i.subs; } },
+  /* 箱内の人を選ぶと、その人がゲストの配信と、その人が配信者の配信の両方が出る */
+  { id: 'collabIn', label: 'コラボ相手（箱内）', param: 'in', vals: function (i) { return i.inVals || i.collabIn; } },
+  { id: 'collabOut', label: 'コラボ相手（箱外）', param: 'collab', vals: function (i) { return i.collabOut; } },
+  { id: 'away', label: 'チャンネル', param: 'ch', vals: function (i) { return [AWAY_LABEL[i.away ? 1 : 0]]; } },
+  { id: 'chan', label: '配信元チャンネル', param: 'chn', vals: function (i) { return i.chan ? [i.chan] : []; } },
+  { id: 'platform', label: 'プラットフォーム', param: 'pf', vals: function (i) { return [PF_LABEL[i.twitch ? 1 : 0]]; } },
+  { id: 'status', label: '公開状態', param: 'status', vals: function (i) { return [STATUS_LABEL[i.status]]; } }
+];
+var PF_LABEL = ['YouTube', 'Twitch'];
+var AWAY_LABEL = ['自チャンネル', '他チャンネル出演'];
+var KIND_LABEL = { 'live': '配信', 'video': '動画', 'short': 'Shorts' };
+var KIND_ORDER = ['配信', '動画', 'Shorts'];
+var FIXED_ORDER = { platform: PF_LABEL, away: AWAY_LABEL, kind: KIND_ORDER, status: ['公開', 'メンバー限定', '非公開'] };
+var STATUS_LABEL = { 'public': '公開', 'members': 'メンバー限定', 'private': '非公開' };
+var STATUS_ORDER = ['公開', 'メンバー限定', '非公開'];
+var PRIVATE_TITLE = '【配信タイトル】◯◯◯◯◯◯◯◯◯◯';
+
+/* ---------- リクエスト・訂正の受付先(config.js の requestUrl) ---------- */
+var CFG = window.SITE_CONFIG || {};
+var REQ_URL = '';
+try {
+  var ru = new URL(String(CFG.requestUrl || '').trim());
+  if (ru.protocol === 'https:' || ru.protocol === 'http:') REQ_URL = ru.href;
+} catch (e) { /* 未設定 */ }
+/* GitHub Issues のURLなら、対象の配信を題名と本文に入れた状態で開きます */
+function reqHref(it) {
+  if (!REQ_URL) return '';
+  var u = new URL(REQ_URL);
+  if (u.hostname === 'github.com' && /\/issues\/new/.test(u.pathname)) {
+    u.searchParams.set('title', '【訂正・追加】' + (it ? (it.title || '（非公開の配信）') : ''));
+    u.searchParams.set('body', (it ? '対象の配信: ' + fmtDate(it.date) + ' ' + it.talent + ' ' + (it.title || '') + '\n\n' : '') + '内容:\n');
+    return u.href;
+  }
+  return REQ_URL;
+}
+function setupRequest() {
+  if (!REQ_URL) return;
+  var nav = $('.site nav');
+  if (nav) nav.insertAdjacentHTML('beforeend', '<a href="' + esc(reqHref(null)) + '" target="_blank" rel="noopener noreferrer">リクエスト</a>');
+  var foot = $('.foot');
+  if (foot) foot.insertAdjacentHTML('beforeend', '<br>追加してほしい配信や、訂正のお願いは<a href="' + esc(reqHref(null)) + '" target="_blank" rel="noopener noreferrer">こちら</a>から受け付けています。');
+}
+
+/* ---------- helpers ---------- */
+function $(s, r) { return (r || document).querySelector(s); }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function norm(s) { return String(s == null ? '' : s).normalize('NFKC').trim().toLowerCase(); }
+function pad(n) { return String(n).padStart(2, '0'); }
+function normDate(s) {
+  var m = String(s || '').trim().match(/^(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+  if (!m) return '';
+  var mo = +m[2], d = +m[3];
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return '';
+  return m[1] + '-' + pad(mo) + '-' + pad(d);
+}
+function fmtDate(s) {
+  var m = String(s || '').match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return '日付なし';
+  var dt = new Date(+m[1], +m[2] - 1, +m[3]);
+  return m[1] + '/' + m[2] + '/' + m[3] + ' (' + WD[dt.getDay()] + ')';
+}
+function safeUrl(u) {
+  u = String(u || '').trim();
+  if (!u) return '';
+  try { var x = new URL(u); return (x.protocol === 'https:' || x.protocol === 'http:') ? x.href : ''; }
+  catch (e) { return ''; }
+}
+/* 公開状態の書き方: 「メンバー限定」「非公開」以外(空欄含む)は公開として扱います */
+function parseStatus(s) {
+  var n = norm(s);
+  if (!n) return 'public';
+  if (/メンバー|メン限|member/.test(n)) return 'members';
+  if (/非公開|private|削除|^[x×]$/.test(n)) return 'private';
+  return 'public';
+}
+/* 形式の書き方: 「動画」「Shorts(ショート)」以外(空欄含む)は配信として扱います */
+function parseKind(s) {
+  var n = norm(s);
+  if (!n) return 'live';
+  if (/short|ショート/.test(n)) return 'short';
+  if (/動画|video|投稿/.test(n)) return 'video';
+  return 'live';
+}
+/* ●○〇✓1 などの印か「はい」「true」が入っていればオン。空欄・×・なし・0 はオフ */
+function parseFlag(s) {
+  var n = norm(s);
+  if (!n) return false;
+  return !/^(×|x|✕|-|ー|なし|無|いいえ|no|false|0|off)$/.test(n);
+}
+function splitTags(s) {
+  return String(s || '').split(/[、;；\/／|]/).map(function (x) { return x.trim(); }).filter(Boolean);
+}
+
+/* ---------- CSV ---------- */
+function parseCSV(text) {
+  text = String(text || '').replace(/^﻿/, '');
+  var rows = [], row = [], cell = '', q = false;
+  for (var i = 0; i < text.length; i++) {
+    var c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+      else cell += c;
+    } else if (c === '"' && cell === '') { q = true; }
+    else if (c === ',') { row.push(cell); cell = ''; }
+    else if (c === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; }
+    else if (c !== '\r') { cell += c; }
+  }
+  row.push(cell); rows.push(row);
+  return rows.filter(function (r) { return r.some(function (x) { return x.trim() !== ''; }); });
+}
+/* 1行目が見出しなら見出し名で列を探し、なければ決まった順番で読みます */
+function mapRows(rows, cols, order) {
+  var head = (rows[0] || []).map(norm), idx = {}, found = 0, start = 0;
+  Object.keys(cols).forEach(function (k) {
+    var i = head.findIndex(function (h) { return cols[k].some(function (a) { return norm(a) === h; }); });
+    if (i >= 0) { idx[k] = i; found++; }
+  });
+  if (found >= 1) start = 1;
+  else { idx = {}; order.forEach(function (k, i) { idx[k] = i; }); }
+  return rows.slice(start).map(function (r) {
+    var o = {};
+    Object.keys(idx).forEach(function (k) { o[k] = (r[idx[k]] || '').trim(); });
+    return o;
+  });
+}
+var ARCH_COLS = {
+  talent: ['配信者', 'タレント', 'talent'], date: ['日付', '配信日', 'date'], title: ['タイトル', 'title'],
+  url: ['URL', 'リンク', 'link'], genre: ['ジャンル', 'genre'], sub: ['詳細ジャンル', 'subgenre'],
+  collab: ['コラボ相手', 'コラボ', 'collab'], memo: ['説明', 'メモ', 'memo'],
+  status: ['公開状態', '公開', 'status'], reason: ['非公開の理由', '理由', 'reason'], kind: ['形式', '種別', 'kind'],
+  priv: ['非公開', '非公開フラグ'], mem: ['メンバー限定', 'メン限', 'メンバー限定フラグ'],
+  video: ['動画', '動画投稿'], short: ['Shorts', 'ショート'],
+  chan: ['配信元チャンネル', '配信チャンネル', 'チャンネル名', 'channel'],
+  twitch: ['Twitch', 'Twitch配信', 'ツイッチ']
+};
+var ARCH_ORDER = ['talent', 'date', 'title', 'url', 'genre', 'sub', 'collab', 'mem', 'video', 'short', 'twitch', 'memo', 'priv', 'reason', 'chan'];
+var TAL_COLS = {
+  slug: ['slug', 'スラッグ', 'id'], name: ['名前', 'name', 'タレント名', '配信者'], box: ['所属', '箱', 'グループ', '事務所', 'box', 'group'], intro: ['紹介', 'intro', 'プロフィール'],
+  youtube: ['youtube', 'チャンネル'], x: ['x', 'twitter'], color: ['色', 'カラー', 'color', 'カラーコード']
+};
+var TAL_ORDER = ['slug', 'name', 'intro', 'youtube', 'x', 'box', 'color'];
+/* 色は #ff6699 の形だけ受け付ける。文字色は背景の明るさで白か黒を自動で選ぶ */
+var TAL_COLOR = {};
+function parseColor(s) {
+  var m = /^#?([0-9a-f]{6}|[0-9a-f]{3})$/i.exec((s || '').trim()); if (!m) return null;
+  var h = m[1]; if (h.length === 3) h = h.replace(/(.)/g, '$1$1');
+  var r = parseInt(h.substr(0, 2), 16), g = parseInt(h.substr(2, 2), 16), b = parseInt(h.substr(4, 2), 16);
+  /* WCAGの相対輝度で、白文字と黒文字のうちコントラストが高いほうを選ぶ */
+  function lin(v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+  var L = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  return { bg: '#' + h, ink: (L + 0.05) / 0.0603 > 1.05 / (L + 0.05) ? '#1a1a1a' : '#ffffff' };
+}
+
+function loadText(u) {
+  // 暗号化して公開しているときは、合言葉で開いたデータを先に使う
+  if (window.SITE_DATA && typeof window.SITE_DATA[u] === 'string') return Promise.resolve(window.SITE_DATA[u]);
+  // data.js があれば(ローカルで直接開いたとき用)、fetchが使えない場合の代わりに使う
+  var local = window.LOCAL_DATA && window.LOCAL_DATA[u];
+  return fetch(u, { cache: 'no-cache' }).then(function (r) {
+    if (!r.ok) throw new Error(u + ' ' + r.status);
+    return r.text();
+  }).catch(function (e) {
+    if (typeof local === 'string') return local;
+    throw e;
+  });
+}
+function prepItem(o, idx) {
+  var it = {
+    idx: idx, talent: (o.talent || '').trim(), date: normDate(o.date), title: (o.title || '').trim(),
+    url: o.url || '', genres: splitTags(o.genre), subs: splitTags(o.sub), collabs: splitTags(o.collab), memo: (o.memo || '').trim(),
+    status: parseFlag(o.priv) ? 'private' : parseFlag(o.mem) ? 'members' : parseStatus(o.status), reason: (o.reason || '').trim(), kind: parseFlag(o.short) ? 'short' : parseFlag(o.video) ? 'video' : parseKind(o.kind), chan: (o.chan || '').trim(), twitch: parseFlag(o.twitch)
+  };
+  it.hay = norm([it.title, it.talent, it.genres.join(' '), it.chan, it.twitch ? 'twitch' : '', it.memo, it.reason, STATUS_LABEL[it.status], KIND_LABEL[it.kind]].concat(it.subs, it.collabs).join(' '));
+  return it;
+}
+function loadData() {
+  return Promise.all([
+    loadText('archives.csv'),
+    loadText('talents.csv').catch(function () { return ''; }),
+    loadText('aliases.csv').catch(function () { return ''; })
+  ]).then(function (res) {
+    var items = mapRows(parseCSV(res[0]), ARCH_COLS, ARCH_ORDER).map(prepItem).filter(function (it) { return it.title || it.status === 'private'; });
+    /* 表記ゆれ: aliases.csv の1行を「同じ意味の言葉」のグループとして、どれで検索しても見つかるようにする */
+    var groups = (res[2] ? parseCSV(res[2]) : []).map(function (r) {
+      return r.map(norm).filter(function (x, i, a) { return x && a.indexOf(x) === i; });
+    }).filter(function (g) { return g.length >= 2; });
+    if (groups.length) items.forEach(function (it) {
+      groups.forEach(function (g) {
+        if (g.some(function (t) { return it.hay.indexOf(t) >= 0; })) it.hay += ' ' + g.join(' ');
+      });
+    });
+    var tRows = res[1] ? mapRows(parseCSV(res[1]), TAL_COLS, TAL_ORDER) : [];
+    var byName = new Map(), bySlug = new Map();
+    tRows.forEach(function (o) {
+      if (!o.name) return;
+      var t = { name: o.name, slug: o.slug || o.name, intro: o.intro || '', youtube: safeUrl(o.youtube), x: safeUrl(o.x), box: o.box || '', color: parseColor(o.color) };
+      t.reg = true; byName.set(norm(t.name), t); bySlug.set(t.slug, t);
+    });
+    var hasReg = byName.size > 0;
+    items.forEach(function (it) {
+      if (!it.talent) return;
+      var k = norm(it.talent);
+      if (!byName.has(k)) {
+        var t = { name: it.talent, slug: it.talent, intro: '', youtube: '', x: '', box: '', reg: !hasReg };
+        byName.set(k, t); bySlug.set(t.slug, t);
+      }
+    });
+    /* 出演者(配信者+ゲスト)と、ゲストの箱内/箱外を決める。同じ「所属」同士なら箱内 */
+    var hasBox = Array.from(byName.values()).some(function (t) { return t.box; });
+    /* 「所属」を誰にも書いていなければ、talents.csv に載っている人は全員、同じ箱として扱う */
+    if (!hasBox && hasReg) {
+      byName.forEach(function (t) { if (t.reg) t.box = '(同じ箱)'; });
+      hasBox = true;
+    }
+    byName.forEach(function (t, k) { if (t.color) TAL_COLOR[k] = t.color; });
+    items.forEach(function (it) {
+      var host = byName.get(norm(it.talent)), hb = host ? norm(host.box) : '';
+      var seen = new Set(), parts = [];
+      function add(n) { var k = norm(n); if (!k || seen.has(k)) return; seen.add(k); parts.push(n); }
+      add(it.talent); it.collabs.forEach(add);
+      it.parts = parts; it.partKeys = seen;
+      it.collabIn = []; it.collabOut = [];
+      it.collabs.forEach(function (c) {
+        var tc = byName.get(norm(c)), cb = tc ? norm(tc.box) : '';
+        (hb && cb && hb === cb ? it.collabIn : it.collabOut).push(c);
+      });
+      /* 自分たち(talents.csv)のタレントのキー。箱外でも「w/」「外部」を付けない */
+      it.color = host ? host.color : null;
+      it.regKeys =new Set(it.collabs.filter(function (c) { var tc = byName.get(norm(c)); return tc && tc.reg; }).map(norm));
+      /* 配信者で絞ると、その人がゲストとして出ている配信(w/)も出す */
+      it.whoVals = hasReg ? (it.talent ? [it.talent] : []).concat(it.collabs.filter(function (c) { var tc = byName.get(norm(c)); return tc && tc.reg && norm(c) !== norm(it.talent); })) : parts;
+      it.inVals =it.collabIn.concat(host && host.reg ?[it.talent] : []);
+      /* 掲載タレント(talents.csv)以外のチャンネルに、掲載タレントがゲストで出ている配信 */
+      it.away = hasReg && !(host && host.reg) && it.collabs.some(function (c) { var tc = byName.get(norm(c)); return tc && tc.reg; });
+      it.hay += ' ' + norm(parts.join(' '));
+    });
+    GROUPS.forEach(function (g) { if (g.id === 'collabOut') g.label = hasBox ? 'コラボ相手（箱外）' : 'コラボ相手'; });
+    return { items: items, hasBox: hasBox, talents: { byName: byName, bySlug: bySlug } };
+  });
+}
+
+/* ---------- 一覧ブラウザ(検索・絞り込み・一覧) ---------- */
+function createBrowser(cfg) {
+  var G = GROUPS.filter(function (g) { return cfg.groups.indexOf(g.id) >= 0; });
+  var st = { all: cfg.all, items: [], q: '', sort: 'desc', f: {}, labels: {}, expanded: {}, per: DEFAULT_PER, page: 1, only: false };
+  G.forEach(function (g) { st.f[g.id] = new Set(); st.labels[g.id] = []; });
+
+  function rebase() {
+    var base = cfg.base();
+    st.items = st.all.filter(base);
+    G.forEach(function (g) {
+      var m = new Map();
+      st.items.forEach(function (it) {
+        var seen = new Set();
+        g.vals(it).forEach(function (v) {
+          var k = norm(v); if (!k || seen.has(k)) return; seen.add(k);
+          var e = m.get(k); if (e) e.count++; else m.set(k, { key: k, label: v, count: 1 });
+        });
+      });
+      st.labels[g.id] = Array.from(m.values()).sort(function (a, b) {
+        if (FIXED_ORDER[g.id]) return FIXED_ORDER[g.id].indexOf(a.label) - FIXED_ORDER[g.id].indexOf(b.label);
+        return b.count - a.count || a.label.localeCompare(b.label, 'ja');
+      });
+      var keys = new Set(st.labels[g.id].map(function (e) { return e.key; }));
+      Array.from(st.f[g.id]).forEach(function (k) { if (!keys.has(k)) st.f[g.id].delete(k); });
+    });
+  }
+  /* 選んだ人が全員出演している配信。2人以上選んだときは、ほかの出演者がいない配信だけに絞る */
+  function castOk(it, set, size) {
+    var ok = true;
+    set.forEach(function (k) { if (!it.partKeys.has(k)) ok = false; });
+    if (!ok) return false;
+    return size < 2 || !st.only || it.partKeys.size === size;
+  }
+  function tokens() { return norm(st.q).split(/\s+/).filter(Boolean); }
+  function matches(it, skip, toks) {
+    for (var t = 0; t < toks.length; t++) if (it.hay.indexOf(toks[t]) < 0) return false;
+    for (var i = 0; i < G.length; i++) {
+      var g = G[i]; if (g.id === skip) continue;
+      var set = st.f[g.id];
+      if (!set.size) continue;
+      if (g.mode === 'all') { if (!castOk(it, set, set.size)) return false; }
+      else if (!g.vals(it).some(function (v) { return set.has(norm(v)); })) return false;
+    }
+    return true;
+  }
+  function visible() {
+    var toks = tokens(), dir = st.sort === 'asc' ? 1 : -1;
+    var rows = st.items.filter(function (it) { return matches(it, null, toks); });
+    rows.sort(function (a, b) {
+      if (!a.date && !b.date) return (a.idx - b.idx) * dir;
+      if (!a.date) return 1; if (!b.date) return -1;
+      if (a.date !== b.date) return a.date < b.date ? -dir : dir;
+      return (a.idx - b.idx) * dir;
+    });
+    return rows;
+  }
+  function activeCount() { var n = 0; G.forEach(function (g) { n += st.f[g.id].size; }); return n; }
+  function labelOf(gid, key) { var e = st.labels[gid].find(function (x) { return x.key === key; }); return e ? e.label : key; }
+
+  function renderFilters() {
+    var toks = tokens(), html = '';
+    G.forEach(function (g) {
+      var all = st.labels[g.id], counts = new Map();
+      if (FIXED_ORDER[g.id] && all.length < 2 && !st.f[g.id].size) return;
+      st.items.forEach(function (it) {
+        if (!matches(it, g.id, toks)) return;
+        if (g.mode === 'all') {
+          var set = st.f[g.id], cover = true;
+          set.forEach(function (k) { if (!it.partKeys.has(k)) cover = false; });
+          if (!cover) return;
+          it.partKeys.forEach(function (k) {
+            var size = set.has(k) ? set.size : set.size + 1;
+            if (size < 2 || !st.only || it.partKeys.size === size) counts.set(k, (counts.get(k) || 0) + 1);
+          });
+          return;
+        }
+        var seen = new Set();
+        g.vals(it).forEach(function (v) { var k = norm(v); if (!k || seen.has(k)) return; seen.add(k); counts.set(k, (counts.get(k) || 0) + 1); });
+      });
+      var limit = 10, exp = st.expanded[g.id];
+      var shown = all.filter(function (e, idx) { return exp || idx < limit || st.f[g.id].has(e.key); });
+      if ((g.id === 'collabIn' || g.id === 'collabOut' || g.id === 'chan') && !all.length && !st.f[g.id].size) return;
+      html += '<section class="grp"><h3>' + esc(g.label) + '</h3>';
+      if (g.id === 'cast') html += '<p class="hint">複数選ぶと、全員が出ている配信を表示します（ゲスト出演も含む）。</p>';
+      if (!all.length) html += '<p class="nogrp">タグはまだありません</p>';
+      else {
+        html += '<div class="chips">' + shown.map(function (e) {
+          var on = st.f[g.id].has(e.key), n = counts.get(e.key) || 0;
+          return '<button type="button" class="chip k-' + g.id + (n ? '' : ' zero') + '" data-f="' + g.id + '" data-k="' + esc(e.key) +
+            '" aria-pressed="' + on + '"><i></i><span class="lbl">' + esc(e.label) + '</span><span class="n">' + n + '</span></button>';
+        }).join('') + '</div>';
+        if (g.id === 'cast' && st.f.cast.size >= 2) html += '<label class="opt"><input type="checkbox" data-only' + (st.only ? ' checked' : '') + '><span>この人たちだけの配信に絞る</span></label>';
+        if (all.length > limit) html += '<button type="button" class="linkbtn more" data-more="' + g.id + '">' +
+          (exp ? '閉じる' : 'ほか ' + (all.length - shown.length) + ' 件を表示') + '</button>';
+      }
+      html += '</section>';
+    });
+    $('#filters').innerHTML = html;
+    var c = activeCount();
+    $('#fbadge').hidden = !c; $('#fbadge').textContent = c;
+  }
+  function renderActive() {
+    var h = '';
+    G.forEach(function (g) {
+      st.f[g.id].forEach(function (k) {
+        h += '<button type="button" class="chip k-' + g.id + '" data-f="' + g.id + '" data-k="' + esc(k) + '" aria-pressed="true" aria-label="' +
+          esc(g.label + ' ' + labelOf(g.id, k)) + 'の絞り込みを外す"><i></i><span class="lbl">' + esc(g.label + '：' + labelOf(g.id, k)) + '</span><span class="n">×</span></button>';
+      });
+    });
+    if (h) h += '<button type="button" class="linkbtn" data-clear>すべて解除</button>';
+    $('#active').innerHTML = h;
+    $('#active').style.marginBottom = h ? '4px' : '0';
+  }
+  function tagBtn(gid, label, cls, noBx) {
+    var tc = (gid === 'collabIn' || gid === 'collabOut') ? TAL_COLOR[norm(label)] : null,
+      sty = tc ? ' style="background:' + tc.bg + ';color:' + tc.ink + '"' : '';
+    var pre = gid === 'chan' ? '配信元：' : '', bx = gid === 'collabOut' && !noBx ?'<small class="bx">外部</small>' : '';
+    if (!st.f[gid]) return '<span class="tag ' + cls + '"' + sty + '>' + pre + esc(label) + bx + '</span>';
+    var on = st.f[gid].has(norm(label));
+    return '<button type="button" class="tag ' + cls + '"' + sty + ' data-f="' + gid + '" data-k="' + esc(norm(label)) + '" aria-pressed="' + on + '">' +
+      pre + esc(label) + bx + '</button>';
+  }
+  function rowHtml(it) {
+    var priv = it.status === 'private', mem = it.status === 'members';
+    var url = safeUrl(it.url);
+    var tt = it.title || (priv ? PRIVATE_TITLE : '');
+    var title = (url && !priv) ? '<a class="title" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + esc(tt) + '</a>'
+      : '<span class="title nolink">' + esc(tt) + '</span>';
+    var badge = (mem || priv) ? '<button type="button" class="st ' + it.status + '" data-f="status" data-k="' + esc(norm(STATUS_LABEL[it.status])) + '" aria-pressed="' + (st.f.status.has(norm(STATUS_LABEL[it.status]))) + '" title="この公開状態で絞り込む">' + STATUS_LABEL[it.status] + '</button>' : '';
+    var away = it.away ? '<span class="kd away">他チャンネル出演</span>' : '';
+    var tw = it.twitch ? '<span class="kd twitch">Twitch</span>' : '';
+    var tags = '';
+    if (it.kind !== 'live') tags += tagBtn('kind', KIND_LABEL[it.kind], 'kind');
+    it.genres.forEach(function (g) { tags += tagBtn('genre', g, 'genre'); });
+    it.subs.forEach(function (s) { tags += tagBtn('sub', s, 'sub'); });
+    if (it.chan) tags += tagBtn('chan', it.chan, 'chan');
+    it.collabIn.forEach(function (c) { tags += tagBtn('collabIn', c, 'collab'); });
+    it.collabOut.forEach(function (c) { tags += tagBtn('collabOut', c, 'collab', it.regKeys.has(norm(c))); });
+    return '<li class="row' + (priv ? ' private' : '') + (mem ? ' members' : '') + '"><div class="meta"><time class="date">' + esc(fmtDate(it.date)) + '</time>' + tw + away + badge +
+      (it.talent ? '<button type="button" class="talent"' + (it.color ? ' style="background:' + it.color.bg + ';color:' + it.color.ink + '"' : '') + ' data-f="cast" data-k="' + esc(norm(it.talent)) + '" title="この配信者で絞り込む">' + esc(it.talent) + '</button>' : '') +
+      (REQ_URL ? '<a class="req" href="' + esc(reqHref(it)) + '" target="_blank" rel="noopener noreferrer">訂正を連絡</a>' : '') +
+      '</div>' + title + (priv && it.reason ? '<p class="reason">※' + esc(it.reason) + '</p>' : '') +
+      (it.memo ? '<p class="desc">' + esc(it.memo) + '</p>' : '') + (tags ? '<div class="tags">' + tags + '</div>' : '') + '</li>';
+  }
+  function pagerHtml(total) {
+    if (total < 2) return '';
+    var cur = st.page;
+    var set = [1, total, cur - 1, cur, cur + 1].filter(function (n) { return n >= 1 && n <= total; });
+    set = Array.from(new Set(set)).sort(function (a, b) { return a - b; });
+    var h = '<nav class="pager" aria-label="ページ送り"><button type="button" class="pg" data-pg="' + (cur - 1) + '"' + (cur < 2 ? ' disabled' : '') + '>‹ 前へ</button>';
+    var prev = 0;
+    set.forEach(function (n) {
+      if (prev && n - prev > 1) h += '<span class="pgap">…</span>';
+      h += '<button type="button" class="pg' + (n === cur ? ' cur' : '') + '" data-pg="' + n + '"' + (n === cur ? ' aria-current="page"' : '') + '>' + n + '</button>';
+      prev = n;
+    });
+    return h + '<button type="button" class="pg" data-pg="' + (cur + 1) + '"' + (cur >= total ? ' disabled' : '') + '>次へ ›</button></nav>';
+  }
+  function scrollToList() {
+    try { var t = $('.toolbar').getBoundingClientRect().top + window.pageYOffset - 70; window.scrollTo({ top: Math.max(0, t) }); } catch (e) { /* ignore */ }
+  }
+  function renderList() {
+    var el = $('#list'), cnt = $('#count');
+    if (!st.items.length) {
+      el.innerHTML = '<div class="empty"><h2>まだ配信が登録されていません</h2><p>archives.csv に配信を追加すると、ここに表示されます。</p></div>';
+      cnt.textContent = ''; return;
+    }
+    var rows = visible();
+    cnt.textContent = rows.length + ' 件を表示' + (rows.length !== st.items.length ? '（全 ' + st.items.length + ' 件）' : '');
+    if (!rows.length) {
+      el.innerHTML = '<div class="empty"><h2>条件に合う配信がありません</h2><p>検索語を短くするか、絞り込みを外してみてください。</p><button class="btn" type="button" data-clear>検索と絞り込みを解除</button></div>';
+      return;
+    }
+    var perMonth = {};
+    rows.forEach(function (r) { var k = r.date ? r.date.slice(0, 7) : ''; perMonth[k] = (perMonth[k] || 0) + 1; });
+    var pages = Math.max(1, Math.ceil(rows.length / st.per));
+    if (st.page > pages) st.page = pages;
+    var from = (st.page - 1) * st.per;
+    cnt.textContent = rows.length + ' 件中 ' + (from + 1) + '〜' + Math.min(from + st.per, rows.length) + ' 件を表示' +
+      (rows.length !== st.items.length ? '（全 ' + st.items.length + ' 件）' : '');
+    var out = '', cur = null, open = false;
+    rows.slice(from, from + st.per).forEach(function (it) {
+      var key = it.date ? it.date.slice(0, 7) : '';
+      if (key !== cur) {
+        if (open) out += '</ul>';
+        out += '<h2 class="month">' + (key ? esc(key.slice(0, 4) + '年' + (+key.slice(5)) + '月') : '日付なし') + '<small>' + perMonth[key] + '件</small></h2><ul class="list">';
+        cur = key; open = true;
+      }
+      out += rowHtml(it);
+    });
+    if (open) out += '</ul>';
+    out += pagerHtml(pages);
+    el.innerHTML = out;
+  }
+  function renderAll() { renderFilters(); renderActive(); renderList(); writeUrl(); }
+
+  /* 検索条件をURLに残して、同じ条件のリンクを共有できるようにします */
+  function writeUrl() {
+    try {
+      var p = new URLSearchParams();
+      (cfg.keepParams || []).forEach(function (k) {
+        var v = new URLSearchParams(location.search).get(k); if (v) p.set(k, v);
+      });
+      if (st.q.trim()) p.set('q', st.q.trim());
+      if (st.sort === 'asc') p.set('sort', 'asc');
+      if (st.per !== DEFAULT_PER) p.set('per', String(st.per));
+      if (st.page > 1) p.set('p', String(st.page));
+      if (st.only && st.f.cast && st.f.cast.size >= 2) p.set('only', '1');
+      G.forEach(function (g) { st.f[g.id].forEach(function (k) { p.append(g.param, k); }); });
+      var s = p.toString();
+      history.replaceState(null, '', s ? '?' + s : location.pathname);
+    } catch (e) { /* ignore */ }
+  }
+  function readUrl() {
+    var p = new URLSearchParams(location.search);
+    st.q = p.get('q') || '';
+    st.sort = p.get('sort') === 'asc' ? 'asc' : 'desc';
+    var per = parseInt(p.get('per'), 10);
+    st.per = PER_OPTIONS.indexOf(per) >= 0 ? per : DEFAULT_PER;
+    st.page = Math.max(1, parseInt(p.get('p'), 10) || 1);
+    st.only = p.get('only') === '1';
+    $('#q').value = st.q; $('#sort').value = st.sort; $('#per').value = String(st.per);
+    G.forEach(function (g) { p.getAll(g.param).forEach(function (k) { st.f[g.id].add(norm(k)); }); });
+    p.getAll('who').forEach(function (k) { st.f.cast.add(norm(k)); }); /* 昔のURL(?who=)も使えるように */
+  }
+
+  function toggle(gid, key) {
+    var s = st.f[gid]; if (!s) return;
+    if (s.has(key)) s.delete(key); else s.add(key);
+    st.page = 1; renderAll();
+  }
+  function clearAll() {
+    G.forEach(function (g) { st.f[g.id].clear(); });
+    st.only = false;
+    st.q = ''; $('#q').value = ''; st.page = 1; renderAll();
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    var lo = t.closest('[data-only]'); if (lo) { st.only = !!lo.checked; st.page = 1; renderAll(); return; }
+    var f = t.closest('[data-f]'); if (f) { toggle(f.getAttribute('data-f'), f.getAttribute('data-k')); return; }
+    var m = t.closest('[data-more]'); if (m) { var id = m.getAttribute('data-more'); st.expanded[id] = !st.expanded[id]; renderFilters(); return; }
+    if (t.closest('[data-clear]')) { clearAll(); return; }
+    var pg = t.closest('[data-pg]');
+    if (pg && !pg.disabled) { st.page = parseInt(pg.getAttribute('data-pg'), 10) || 1; renderList(); writeUrl(); scrollToList(); }
+  });
+  $('#q').addEventListener('input', function (e) { st.q = e.target.value; st.page = 1; renderFilters(); renderActive(); renderList(); writeUrl(); });
+  $('#sort').addEventListener('change', function (e) { st.sort = e.target.value; st.page = 1; renderList(); writeUrl(); });
+  $('#per').addEventListener('change', function (e) { st.per = parseInt(e.target.value, 10) || DEFAULT_PER; st.page = 1; renderList(); writeUrl(); });
+  /* スマホでは、絞り込みを左から出るパネルにする。外側か「閉じる」で閉じる */
+  function setFilters(o) { $('#filters').classList.toggle('open', o); $('#fbtn').setAttribute('aria-expanded', String(o)); }
+  $('#fbtn').addEventListener('click', function () { setFilters(!$('#filters').classList.contains('open')); });
+  $('#fclose').addEventListener('click', function () { setFilters(false); });
+  $('#fback').addEventListener('click', function () { setFilters(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setFilters(false); });
+
+  readUrl(); rebase(); renderAll();
+  return { rebase: function () { st.page = 1; rebase(); renderAll(); } };
+}
+
+/* ---------- ページごとの起動 ---------- */
+function fail(msg) {
+  var el = $('#list') || $('#app');
+  if (el) el.innerHTML = '<div class="empty"><h2>データを読み込めませんでした</h2><p>' + esc(msg) + '</p></div>';
+  var l = $('#lede'); if (l) l.textContent = '';
+}
+var LOAD_HELP = 'archives.csv が同じ場所にあるか確認してください。ファイルを直接開いている場合は、make_data.py（または make_data.js）を実行して data.js を作ると表示されます。';
+
+function bootIndex(data) {
+  var talents = new Set(data.items.filter(function (i) { var t = data.talents.byName.get(norm(i.talent)); return t && t.reg; })
+    .map(function (i) { return norm(i.talent); }).filter(Boolean));
+  $('#lede').textContent = '全 ' + data.items.length + ' 件' + (talents.size ? ' ／ ' + talents.size + ' 人' : '');
+  createBrowser({
+    groups: ['cast', 'genre', 'sub', 'collabIn', 'collabOut', 'away', 'chan', 'platform', 'kind', 'status'], hasBox: data.hasBox, all: data.items, talents: data.talents,
+    base: function () { return function () { return true; }; }
+  });
+}
+
+/* ---------- 合言葉(暗号化して公開するとき) ---------- */
+var PASS_KEY = 'archive-pass';
+function unb64(s) { var b = atob(s), a = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) a[i] = b.charCodeAt(i); return a; }
+function decryptBundle(enc, pass) {
+  var sub = window.crypto && window.crypto.subtle;
+  if (!sub || !window.DecompressionStream) return Promise.reject(new Error('unsupported'));
+  return sub.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']).then(function (km) {
+    return sub.deriveKey({ name: 'PBKDF2', salt: unb64(enc.salt), iterations: enc.iter, hash: 'SHA-256' }, km, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+  }).then(function (key) {
+    return sub.decrypt({ name: 'AES-GCM', iv: unb64(enc.iv) }, key, unb64(enc.data));
+  }).then(function (buf) {
+    return new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+  }).then(function (txt) { return JSON.parse(txt); });
+}
+function lsGet() { try { return localStorage.getItem(PASS_KEY); } catch (e) { return null; } }
+function lsSet(v) { try { if (v == null) localStorage.removeItem(PASS_KEY); else localStorage.setItem(PASS_KEY, v); } catch (e) { } }
+function unlock() {
+  if (!(window.SITE_CONFIG && window.SITE_CONFIG.encrypted)) return Promise.resolve();
+  var gate = $('#gate'), form = $('#gform'), msg = $('#gmsg');
+  document.body.classList.add('locked');
+  return fetch('data.enc', { cache: 'no-cache' }).then(function (r) { if (!r.ok) throw new Error('data.enc ' + r.status); return r.json(); }).then(function (enc) {
+    function done(bundle, pass, remember) {
+      window.SITE_DATA = bundle; lsSet(remember ? pass : null);
+      document.body.classList.remove('locked'); gate.hidden = true;
+    }
+    var saved = lsGet();
+    var first = saved ? decryptBundle(enc, saved).then(function (b) { done(b, saved, true); return true; }).catch(function () { lsSet(null); return false; }) : Promise.resolve(false);
+    return first.then(function (ok) {
+      if (ok) return;
+      gate.hidden = false;
+      return new Promise(function (resolve) {
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          var pass = $('#gpass').value; if (!pass) return;
+          msg.textContent = '確認しています…'; $('#gbtn').disabled = true;
+          decryptBundle(enc, pass).then(function (b) { done(b, pass, $('#gkeep').checked); resolve(); }).catch(function (err) {
+            $('#gbtn').disabled = false;
+            msg.textContent = (err && err.message === 'unsupported') ? 'このブラウザでは開けません。新しいバージョンのChrome・Safari・Firefoxで開いてください。' : '合言葉が違います。';
+          });
+        });
+      });
+    });
+  });
+}
+
+unlock().then(loadData).then(function (data) {
+  setupRequest();
+  bootIndex(data);
+}).catch(function (e) {
+  fail(LOAD_HELP);
+  if (window.console) console.error(e);
+});
+})();
+
+</script>
+</body>
+</html>
